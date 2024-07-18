@@ -1,7 +1,7 @@
 
-import React, { FC, ReactNode, useState } from 'react'
+import React, { FC, ReactNode } from 'react'
 import { View } from 'react-native'
-import { Button, IconButton, Modal, Portal, Text, useTheme } from 'react-native-paper'
+import { Button, Modal, Portal, Text, useTheme } from 'react-native-paper'
 
 type AppModalProps = {
     title?: string,

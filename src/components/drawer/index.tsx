@@ -1,16 +1,31 @@
 import { View, Image } from 'react-native'
-import { Avatar, Text } from 'react-native-paper'
+import { ActivityIndicator, Text } from 'react-native-paper'
 import { DrawerContentScrollView, DrawerItem, DrawerItemList } from '@react-navigation/drawer'
 import { router } from 'expo-router'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { supabase } from '../../lib/supabase'
+import { useState } from 'react'
+import Indicator from '../indicator'
 
 export default function DrawerContent(props: any) {
 
     const year = new Date().getFullYear();
+    const [logout, setLogout] = useState<boolean>(false);
 
-    const handleLogout = () => {
-        router.push("login");
+    const handleLogout = async () => {
+
+        try {
+            setLogout(true);
+            const { error } = await supabase.auth.signOut();
+            if (!error) {
+                router.push("login");
+            }
+
+        } catch (e) {
+            console.log(e)
+        }
+
     }
 
     const { top, bottom } = useSafeAreaInsets();
@@ -55,6 +70,11 @@ export default function DrawerContent(props: any) {
                     Copyright &copy; {year}. All rights reserved
                 </Text>
             </View>
+            {logout &&
+                <Indicator visible={logout} onDismiss={() => setLogout(prev => !prev)}>
+                    <ActivityIndicator size={50} />
+                </Indicator>
+            }
         </View>
     )
 }

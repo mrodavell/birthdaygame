@@ -2,16 +2,18 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Link, router } from 'expo-router';
 import { FormikProvider, useFormik } from 'formik';
 import React, { useState } from 'react';
-import { View, Image, SafeAreaView, Keyboard, ScrollView } from 'react-native';
-import { TextInput, Button, useTheme, Text, HelperText } from 'react-native-paper';
+import { View, Image, SafeAreaView, Keyboard, ScrollView, Alert } from 'react-native';
+import { TextInput, Button, useTheme, Text, HelperText, ActivityIndicator } from 'react-native-paper';
 import { AuthSchema } from '../schemas/auth';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { supabase } from '../lib/supabase';
 
 export default function login() {
 
     const theme = useTheme();
     const { bottom } = useSafeAreaInsets();
     const [showPass, setShowPass] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(false);
 
     const formik = useFormik({
         initialValues: {
@@ -19,8 +21,36 @@ export default function login() {
             password: '',
         },
         validationSchema: AuthSchema,
-        onSubmit: async (values) => {
-            console.log(values)
+        onSubmit: async ({ mobileNumber, password }) => {
+            try {
+
+                setLoading(true);
+
+                let mobile = mobileNumber;
+                if (mobile.charAt(0) === '0') {
+                    mobile = `63${mobileNumber.substring(1)}`;
+                }
+
+                const { error } = await supabase.auth.signInWithPassword({
+                    phone: mobile,
+                    password: password,
+                })
+
+                if (!error) {
+                    router.push('dashboard');
+                }
+
+                if (error) {
+                    Alert.alert("Error", "Invalid Credentials", [
+                        { text: 'OK' }
+                    ])
+                }
+
+            } catch (e) {
+                console.log(e)
+            } finally {
+                setLoading(false);
+            }
         }
     })
 
@@ -81,8 +111,10 @@ export default function login() {
                                 contentStyle={{ minHeight: 50 }}
                                 mode="elevated"
                                 onPress={() => formik.submitForm()}
+                                disabled={loading}
                             >
-                                LOGIN
+                                {!loading && <Text style={{ color: 'white' }}>LOGIN</Text>}
+                                {loading && <ActivityIndicator animating={true} color='white' />}
                             </Button>
                         </View>
                         <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'center' }}>
@@ -94,6 +126,7 @@ export default function login() {
                                     textColor='white'
                                     mode='elevated'
                                     onPress={() => router.push("register")}
+                                    disabled={loading}
                                 >
                                     REGISTER HERE
                                     <MaterialCommunityIcons name='arrow-right' />

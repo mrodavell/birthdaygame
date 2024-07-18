@@ -186,7 +186,7 @@ export default function register() {
                                 onPress={() => formik.submitForm()}
                                 disabled={!legalAge || loading}
                             >
-                                {!loading && "REGISTER"}
+                                {!loading && <Text style={{ color: 'white' }}>REGISTER</Text>}
                                 {loading && <ActivityIndicator animating={true} color='white' />}
                             </Button>
                         </View>
