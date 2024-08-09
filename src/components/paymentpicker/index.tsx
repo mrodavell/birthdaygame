@@ -28,12 +28,13 @@ const PaymentPicker: FC<TPaymentPickerProps> = ({ handlePick }) => {
                     <Button
                         mode='outlined'
                         onPress={() => handlePicking(item.item.toString())}
-                        style={{ borderRadius: 5, margin: 5, minWidth: 150, minHeight: 50 }}
+                        style={{ borderRadius: 5, margin: 5, minWidth: 170, minHeight: 50 }}
                         labelStyle={{ color: theme.colors.tertiary }}
+                        contentStyle={{ alignItems: 'center', justifyContent: 'center' }}
                     >
                         {item.item}
                         {pick === item.item &&
-                            <MaterialCommunityIcons name="check" size={25} style={{ color: theme.colors.primary }} />
+                            <MaterialCommunityIcons name="check" size={20} style={{ color: theme.colors.primary, marginLeft: 10, marginTop: 10 }} />
                         }
                     </Button>
                 )}

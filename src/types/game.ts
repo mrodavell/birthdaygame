@@ -2,7 +2,6 @@ export type TBoard = {
   label: string;
   combination: TCombination;
   bet: string;
-  index?: number;
   status: string;
 };
 
@@ -13,7 +12,18 @@ export type TCombination = {
 };
 
 export type TBet = {
-  board: string;
+  label: string;
   combination: TCombination;
   bet: number;
+};
+
+export type TTicket = {
+  datePurchased: string;
+  drawNumber: string;
+  drawDate: string;
+  serial: string;
+  boards: TBoard[] | string;
+  totalBet: string;
+  draws: string;
+  drawTimes: string[];
 };

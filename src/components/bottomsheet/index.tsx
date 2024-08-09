@@ -13,7 +13,7 @@ type Ref = BottomSheetModal
 const AppBottomSheet = forwardRef<Ref, TAppBottomSheetProps>((props, ref) => {
 
     const theme = useTheme();
-    const snapPoints = useMemo(() => ['50%', '65%'], []);
+    const snapPoints = useMemo(() => ['50%', '75%'], []);
     const { children } = props;
 
     return (

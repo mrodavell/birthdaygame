@@ -1,16 +1,19 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import { FormikProvider, useFormik } from 'formik';
 import React, { useState } from 'react';
-import { View, Image, SafeAreaView, Keyboard, ScrollView, Alert } from 'react-native';
-import { TextInput, Button, useTheme, Text, HelperText, ActivityIndicator } from 'react-native-paper';
+import { View, Image, SafeAreaView, Keyboard, ScrollView, Alert, useWindowDimensions } from 'react-native';
+import { TextInput, Button, useTheme, Text, HelperText, ActivityIndicator, IconButton } from 'react-native-paper';
 import { AuthSchema } from '../schemas/auth';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '../lib/supabase';
+import ShareGame from '../components/sharegame';
 
 export default function login() {
 
     const theme = useTheme();
+    const dimensions = useWindowDimensions();
+    const screenHeight = dimensions.height;
     const { bottom } = useSafeAreaInsets();
     const [showPass, setShowPass] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
@@ -47,7 +50,7 @@ export default function login() {
                 }
 
             } catch (e) {
-                console.log(e)
+
             } finally {
                 setLoading(false);
             }
@@ -57,8 +60,11 @@ export default function login() {
     return (
         <FormikProvider value={formik}>
             <SafeAreaView style={{ flex: 1, paddingHorizontal: 20, backgroundColor: theme.colors.primary }}>
-                <ScrollView showsVerticalScrollIndicator={false}>
-                    <View style={{ flex: 1, flexGrow: 1, flexDirection: 'column', justifyContent: 'flex-start', gap: 20, marginTop: '30%', marginBottom: 40 + bottom }}>
+                <ScrollView style={{ maxHeight: screenHeight }} showsVerticalScrollIndicator={false}>
+                    <View style={{ flex: 1, flexGrow: 1, flexDirection: 'column', justifyContent: 'flex-start', gap: 20, marginTop: '20%', marginBottom: 40 + bottom }}>
+                        <View style={{ flex: 1, flexDirection: 'row' }}>
+                            <ShareGame />
+                        </View>
                         <View style={{ padding: 20 }}>
                             <Image source={require("../../assets/logo.png")} style={{ alignSelf: 'center', height: 200, width: 200 }} />
                         </View>

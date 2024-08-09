@@ -1,16 +1,19 @@
 import { Link, router } from 'expo-router';
 import { FormikProvider, useFormik } from 'formik';
 import React, { useState } from 'react';
-import { View, Image, SafeAreaView, Keyboard, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Image, SafeAreaView, Keyboard, TouchableOpacity, ScrollView, useWindowDimensions } from 'react-native';
 import { TextInput, Button, useTheme, Text, Checkbox, HelperText, ActivityIndicator } from 'react-native-paper';
 import { SignUpSchema } from '../schemas/auth';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
+import ShareGame from '../components/sharegame';
 
 export default function register() {
 
     const theme = useTheme();
+    const dimensions = useWindowDimensions();
+    const screenHeight = dimensions.height;
     const { bottom } = useSafeAreaInsets();
     const [showPass, setShowPass] = useState<boolean>(false);
     const [showConfirmPass, setShowConfirmPass] = useState<boolean>(false);
@@ -63,8 +66,11 @@ export default function register() {
     return (
         <FormikProvider value={formik}>
             <SafeAreaView style={{ flex: 1, paddingHorizontal: 20, backgroundColor: theme.colors.primary }}>
-                <ScrollView showsVerticalScrollIndicator={false}>
+                <ScrollView style={{ maxHeight: screenHeight }} showsVerticalScrollIndicator={false}>
                     <View style={{ flex: 1, flexGrow: 1, flexDirection: 'column', justifyContent: 'flex-start', gap: 20, marginTop: '20%', marginBottom: 40 + bottom }}>
+                        <View style={{ flex: 1, flexDirection: 'row' }}>
+                            <ShareGame />
+                        </View>
                         <View style={{ padding: 20 }}>
                             <Image source={require("../../assets/logo.png")} style={{ alignSelf: 'center', height: 100, width: 100 }} />
                         </View>

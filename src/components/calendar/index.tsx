@@ -1,10 +1,9 @@
-import { View, FlatList, Alert } from 'react-native'
-import React, { FC, useEffect, useState } from 'react'
+import { View, FlatList, Alert, useWindowDimensions } from 'react-native'
+import React, { FC, Fragment, useEffect, useState } from 'react'
 import { Dates } from '../../constants/Dates';
 import CircleButton from '../circlebutton';
-import { Button, Divider, IconButton, Modal, Portal, Text, TextInput, useTheme } from 'react-native-paper';
+import { ActivityIndicator, Button, Divider, IconButton, Modal, Portal, Text, TextInput, useTheme } from 'react-native-paper';
 import { ScrollView } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useWalletStore } from '../../zustand/wallet';
 import { TBet, TBoard } from '../../types/game';
 import { useGameStore } from '../../zustand/game';
@@ -29,10 +28,10 @@ const Calendar: FC<TCalendarProps> = ({
     const theme = useTheme()
     const containerStyle = { backgroundColor: 'white', padding: 10, margin: 20, height: 810 };
     const wallet = useWalletStore((state) => state.wallet);
-    const { betDeduction } = useWalletStore();
-    const { handleBoards, getTotal, clear } = useGameStore();
+    const { handleBoards, clearBoard } = useGameStore();
 
-    const [bet, setBet] = useState<string>("10.00");
+    const [processing, setProcessing] = useState<boolean>(false);
+    const [bet, setBet] = useState<string>("10");
     const [selectedMonth, setSelectedMonth] = useState<string | null>("01");
     const [monthIndex, setMonthIndex] = useState<number>(0);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -40,13 +39,15 @@ const Calendar: FC<TCalendarProps> = ({
 
     const months = Dates.months;
     const days = Array.from({ length: Dates.days[monthIndex] }, (v, i) => i + 1)
+    const dimensions = useWindowDimensions();
+    const screenHeight = dimensions.height;
 
     useEffect(() => {
-        const oldBet = data?.bet ?? "10.00";
+        const oldBet = data?.bet ?? "10";
         setSelectedMonth(data?.combination.month ?? "01");
         setSelectedDate(data?.combination.date ?? null);
         setSelectedLetters(data?.combination.letters ?? []);
-        setBet(oldBet === "" ? "10.00" : oldBet);
+        setBet(oldBet === "" ? "10" : oldBet);
     }, [data])
 
     const handleMonth = (index: number, month: string) => {
@@ -74,20 +75,9 @@ const Calendar: FC<TCalendarProps> = ({
 
     const handleBet = (bet: string) => {
 
-        if (bet === "") {
-            handleAlerts("Please specify bet");
-            return;
-        }
-
         const myWallet = wallet ?? "0.00";
-
         if (parseInt(myWallet) < parseInt(bet)) {
             handleAlerts("Insufficient Funds");
-            return;
-        }
-
-        if (parseInt(bet) < 1 || parseInt(bet) > 20) {
-            handleAlerts("Minimum bet is 1 and maximum is 20");
             return;
         }
 
@@ -108,17 +98,15 @@ const Calendar: FC<TCalendarProps> = ({
     }
 
     const incrementBet = () => {
-        if (parseInt(bet) > 20) return;
-
         const newBet = parseInt(bet) + 1;
-        handleBet(parseFloat(newBet.toString()).toFixed(2))
+        handleBet(newBet.toString())
     }
 
     const decrementBet = () => {
         if (parseInt(bet) < 1) return;
 
         const newBet = parseInt(bet) - 1;
-        handleBet(parseFloat(newBet.toString()).toFixed(2))
+        handleBet(newBet.toString())
     }
 
     const handleConfirmBet = () => {
@@ -130,6 +118,10 @@ const Calendar: FC<TCalendarProps> = ({
 
         if (bet === "") {
             message = "Please input bet";
+        }
+
+        if (parseInt(bet) <= 0) {
+            message = "Minimum bet is 1"
         }
 
         if (selectedMonth === "") {
@@ -149,30 +141,38 @@ const Calendar: FC<TCalendarProps> = ({
     }
 
     const handleAddBet = () => {
-        const data: TBet = {
-            board: title ?? '',
-            bet: parseInt(bet),
-            combination: {
-                month: selectedMonth ?? '',
-                date: selectedDate ?? '',
-                letters: selectedLetters
+
+        try {
+            setProcessing(true);
+            if (wallet === null) {
+                Alert.alert("Wallet Warning", "Insufficient wallet funds");
+                return;
             }
-        }
-        let calculatedBet = 0;
-        if (parseInt(data?.bet.toString()) > parseInt(bet)) {
-            calculatedBet = parseInt(data?.bet.toString()) - parseInt(bet)
-        }
-        handleBoards(data, index);
 
-        if (data.combination.date !== "") {
-            betDeduction(parseInt(bet));
+            if (parseInt(bet) > parseInt(wallet)) {
+                Alert.alert("Wallet Warning", "Insufficient wallet funds");
+                return;
+            }
+
+            const newdata: TBet = {
+                label: title ?? '',
+                bet: parseInt(bet),
+                combination: {
+                    month: selectedMonth ?? '',
+                    date: selectedDate ?? '',
+                    letters: selectedLetters
+                }
+            }
+
+            setTimeout(() => {
+                handleBoards(newdata);
+                handleDismiss();
+            }, 500)
+        } catch (error: any) {
+            console.log(error);
+        } finally {
+            setProcessing(false);
         }
-        getTotal();
-        handleDismiss()
-    }
-
-    const handleClearBet = () => {
-
     }
 
     const handleConfirmPrompt = (msg: string) => {
@@ -182,14 +182,40 @@ const Calendar: FC<TCalendarProps> = ({
         ])
     }
 
+    const handleClearBet = () => {
+        handleClearPrompt("Clear bet on this board?")
+    }
+
+    const handleClearPrompt = (msg: string) => {
+        if (!data) return;
+
+        Alert.alert("Are you sure?", msg, [
+            { text: "Cancel", onPress: () => null },
+            {
+                text: "Ok", onPress: async () => handleClearBoard()
+            }
+        ])
+    }
+
+    const handleClearBoard = () => {
+        try {
+            setProcessing(true);
+            setTimeout(() => {
+                clearBoard(data);
+                handleDismiss();
+            }, 500)
+        } catch (error: any) {
+            console.log(error);
+        } finally {
+            setProcessing(false);
+        }
+    }
+
     const handleAlerts = (msg: string) => {
         Alert.alert("Error", msg, [
             { text: 'OK' }
         ])
     }
-
-
-
 
     return (
         <Portal>
@@ -198,69 +224,76 @@ const Calendar: FC<TCalendarProps> = ({
                     <Text variant='titleLarge'>Board {title}</Text>
                     <IconButton icon="close" onPress={handleDismiss} />
                 </View>
-                <ScrollView style={{ maxHeight: 850 }}>
-                    <View style={{ display: 'flex', flex: 1, padding: 10 }}>
-                        <View style={{ flex: 1 }}>
-                            <Text variant='titleMedium'>Months</Text>
-                            <View style={{ minHeight: 120, alignItems: 'center' }}>
-                                <FlatList
-                                    data={months}
-                                    renderItem={(item) => <CircleButton month={selectedMonth} type='month' label={item.item} index={item.index} handleMonth={handleMonth} />}
-                                    keyExtractor={(item) => item}
-                                    numColumns={7}
-                                    style={{ flex: 1 }}
-                                    contentContainerStyle={{ paddingVertical: 20 }}
-                                    scrollEnabled={false}
-                                />
+                <ScrollView style={{ maxHeight: screenHeight }} showsVerticalScrollIndicator={false}>
+                    {processing && <View style={{ flex: 1, height: screenHeight - 200, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size={50} /></View>}
+                    {!processing &&
+                        <Fragment>
+                            <View style={{ display: 'flex', flex: 1, padding: 10 }}>
+                                <View style={{ flex: 1 }}>
+                                    <Text variant='titleMedium'>Month</Text>
+                                    <View style={{ minHeight: 120, alignItems: 'center' }}>
+                                        <FlatList
+                                            data={months}
+                                            renderItem={(item) => <CircleButton month={selectedMonth} type='month' label={item.item} index={item.index} handleMonth={handleMonth} />}
+                                            keyExtractor={(item) => item}
+                                            numColumns={7}
+                                            style={{ flex: 1 }}
+                                            contentContainerStyle={{ paddingVertical: 20 }}
+                                            scrollEnabled={false}
+                                        />
+                                    </View>
+                                    <Divider style={{ marginVertical: 10 }} />
+                                    <Text variant='titleMedium'>Date</Text>
+                                    <View style={{ minHeight: 270, alignItems: 'center' }}>
+                                        <FlatList
+                                            data={days}
+                                            renderItem={(item) => <CircleButton date={selectedDate} type='date' label={item.item.toString()} index={item.index} handleDay={handleDay} />}
+                                            numColumns={7}
+                                            style={{ flex: 1 }}
+                                            contentContainerStyle={{ paddingVertical: 20 }}
+                                            scrollEnabled={false}
+                                        />
+                                    </View>
+                                    <Divider style={{ marginVertical: 10 }} />
+                                    <Text variant='titleMedium'>Letter/s</Text>
+                                    <View style={{ height: 150, alignItems: 'center' }}>
+                                        <FlatList
+                                            data={["A", "B", "C", "D"]}
+                                            renderItem={(item) => <CircleButton letters={selectedLetters} type='letters' label={item.item.toString()} index={item.index} handleLetter={handleLetter} />}
+                                            numColumns={2}
+                                            style={{ flex: 1 }}
+                                            contentContainerStyle={{ paddingVertical: 10 }}
+                                            scrollEnabled={false}
+                                        />
+                                    </View>
+                                    <Divider style={{ marginVertical: 10 }} />
+                                    <Text variant='titleMedium'>Place Bet</Text>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+                                        <IconButton icon="minus" onPress={decrementBet} />
+                                        <TextInput
+                                            mode='outlined'
+                                            keyboardType='numeric'
+                                            value={bet}
+                                            placeholder={bet}
+                                            onChangeText={handleBet}
+                                            clearTextOnFocus
+                                            contentStyle={{ textAlign: 'center' }}
+                                        />
+                                        <IconButton icon="plus" onPress={incrementBet} />
+                                    </View>
+                                </View>
                             </View>
-                            <Divider style={{ marginVertical: 10 }} />
-                            <Text variant='titleMedium'>Date</Text>
-                            <View style={{ minHeight: 270, alignItems: 'center' }}>
-                                <FlatList
-                                    data={days}
-                                    renderItem={(item) => <CircleButton date={selectedDate} type='date' label={item.item.toString()} index={item.index} handleDay={handleDay} />}
-                                    numColumns={7}
-                                    style={{ flex: 1 }}
-                                    contentContainerStyle={{ paddingVertical: 20 }}
-                                    scrollEnabled={false}
-                                />
+                            <View style={{ display: 'flex', flexDirection: 'row', gap: 10, alignContent: 'center', justifyContent: 'center', marginBottom: 35, marginTop: 0 }}>
+                                {data?.status === 'filled' &&
+                                    <Button mode='contained' style={{ minWidth: 120 }} buttonColor={theme.colors.tertiary} onPress={handleClearBet}>Clear Bet</Button>
+                                }
+                                <Button mode='contained' style={{ minWidth: 120 }} buttonColor={theme.colors.primary} onPress={handleConfirmBet}>Add Bet</Button>
                             </View>
-                            <Divider style={{ marginVertical: 10 }} />
-                            <Text variant='titleMedium'>Letters</Text>
-                            <View style={{ height: 70, alignItems: 'center' }}>
-                                <FlatList
-                                    data={["A", "B", "C", "D"]}
-                                    renderItem={(item) => <CircleButton letters={selectedLetters} type='letters' label={item.item.toString()} index={item.index} handleLetter={handleLetter} />}
-                                    numColumns={4}
-                                    style={{ flex: 1 }}
-                                    contentContainerStyle={{ paddingVertical: 20 }}
-                                    scrollEnabled={false}
-                                />
-                            </View>
-                            <Divider style={{ marginVertical: 10 }} />
-                            <Text variant='titleMedium'>Place Bet</Text>
-                            <View style={{ flexDirection: 'row' }}>
-                                <Button onPress={decrementBet} mode='outlined' style={{ margin: 10 }} contentStyle={{ justifyContent: 'center', alignItems: "center" }}><MaterialCommunityIcons name='minus' size={20} /></Button>
-                                <TextInput
-                                    mode='outlined'
-                                    keyboardType='numeric'
-                                    value={bet}
-                                    placeholder={bet}
-                                    onChangeText={handleBet}
-                                    style={{ flex: 1 }}
-                                    contentStyle={{ textAlign: 'center' }}
-                                />
-                                <Button onPress={incrementBet} mode='outlined' style={{ margin: 10 }} contentStyle={{ justifyContent: 'center', alignItems: "center" }}> <MaterialCommunityIcons name='plus' size={20} /></Button>
-                            </View>
-                        </View>
-                    </View>
-                    <View style={{ display: 'flex', flexDirection: 'row', gap: 10, alignContent: 'center', justifyContent: 'center', marginBottom: 15, marginTop: 20 }}>
-                        <Button mode='contained' style={{ minWidth: 120 }} buttonColor={theme.colors.tertiary} onPress={handleConfirmBet}>Clear Bet</Button>
-                        <Button mode='contained' style={{ minWidth: 120 }} buttonColor={theme.colors.primary} onPress={handleConfirmBet}>Confirm Bet</Button>
-                    </View>
+                        </Fragment>
+                    }
                 </ScrollView>
             </Modal>
-        </Portal>
+        </Portal >
 
     )
 }

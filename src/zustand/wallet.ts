@@ -17,9 +17,10 @@ type TActions = {
   fetchWallet: () => void;
   setWallet: (amount: string) => void;
   betDeduction: (amount: number) => void;
-  deposit: (amount: number) => void;
-  withdraw: (amount: number) => void;
-  logTransaction: (data: TTransactions) => void;
+  deposit: (amount: number, transaction: string) => void;
+  withdraw: (amount: number, transaction: string) => void;
+  handleTransactions: (data: TTransactions) => void;
+  setTransactions: (transactions: any) => void;
 };
 
 export const useWalletStore = create<TState & TActions>((set, get) => ({
@@ -32,7 +33,7 @@ export const useWalletStore = create<TState & TActions>((set, get) => ({
   setWallet: async (amount: string) => {
     await AsyncStorage.setItem("wallet", amount);
   },
-  deposit: (amount: number) => {
+  deposit: (amount: number, transaction = "Deposit") => {
     const myWallet = get().wallet ?? "0.00";
     const finalAmount = parseInt(myWallet) + amount;
 
@@ -40,13 +41,13 @@ export const useWalletStore = create<TState & TActions>((set, get) => ({
     get().setWallet(parseFloat(finalAmount.toString()).toFixed(2));
 
     const data: TTransactions = {
-      type: "Deposit",
+      type: transaction,
       date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
       amount: amount,
     };
-    get().logTransaction(data);
+    get().handleTransactions(data);
   },
-  withdraw: (amount: number) => {
+  withdraw: (amount: number, transaction = "Withdraw") => {
     const myWallet = get().wallet ?? "0.00";
     const finalAmount = parseInt(myWallet) - amount;
 
@@ -54,11 +55,11 @@ export const useWalletStore = create<TState & TActions>((set, get) => ({
     get().setWallet(parseFloat(finalAmount.toString()).toFixed(2));
 
     const data: TTransactions = {
-      type: "Withdraw",
+      type: transaction,
       date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
       amount: amount,
     };
-    get().logTransaction(data);
+    get().handleTransactions(data);
   },
   betDeduction: (amount: number) => {
     const myWallet = get().wallet ?? "0.00";
@@ -72,8 +73,15 @@ export const useWalletStore = create<TState & TActions>((set, get) => ({
       date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
       amount: amount,
     };
-    get().logTransaction(data);
+    get().handleTransactions(data);
   },
-  logTransaction: (data: TTransactions) =>
-    set((state) => ({ transactions: [...state.transactions, data] })),
+  handleTransactions: (data: TTransactions) => {
+    const prevTransactions = get().transactions;
+    prevTransactions.push(data);
+    set(() => ({ transactions: [...prevTransactions] }));
+    AsyncStorage.setItem("transactions", JSON.stringify(prevTransactions));
+  },
+  setTransactions: (transactions: any) => {
+    set(() => ({ transactions: [...(transactions ?? [])] }));
+  },
 }));

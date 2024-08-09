@@ -24,6 +24,8 @@ export default function DrawerContent(props: any) {
 
         } catch (e) {
             console.log(e)
+        } finally {
+            setLogout(false);
         }
 
     }
@@ -34,7 +36,7 @@ export default function DrawerContent(props: any) {
         <View style={{ flex: 1 }}>
             <DrawerContentScrollView
                 {...props}
-                scrollEnabled={false}
+                scrollEnabled={true}
                 contentContainerStyle={{ paddingTop: top }}
             >
                 <View

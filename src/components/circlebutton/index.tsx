@@ -39,16 +39,31 @@ const CircleButton: FC<TCircleButtonProps> = ({ label, index, month, letters, da
                 <View
                     style={{
                         padding: 10,
-                        margin: 5,
+                        marginVertical: 10,
+                        marginHorizontal: 20,
                         borderWidth: 1,
-                        height: 40,
-                        width: 50,
+                        height: 55,
+                        width: 80,
                         alignItems: 'center',
                         backgroundColor: letters?.includes(label) ? theme.colors.primary : theme.colors.surface
                     }
                     }>
                     <Text>
                         {label}
+                    </Text>
+                    <Text>
+                        {
+                            label.toLowerCase() === "a" && "Alpha"
+                        }
+                        {
+                            label.toLowerCase() === "b" && "Beta"
+                        }
+                        {
+                            label.toLowerCase() === "c" && "Charlie"
+                        }
+                        {
+                            label.toLowerCase() === "d" && "Delta"
+                        }
                     </Text>
                 </View>
             }

@@ -33,10 +33,8 @@ export default function otp() {
         try {
             setLoading(true);
 
-
             const { data, error } = await supabase.auth.verifyOtp({ phone: phone, token: otp, type: 'sms' })
             console.log({ data, error })
-
 
             if (!error) {
                 pathTo === "changepassword" ? router.push("changepassword") : router.push("login")

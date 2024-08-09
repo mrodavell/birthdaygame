@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router'
 import { useTheme } from 'react-native-paper'
-import { View, Text } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 
 const TabsLayout = () => {
 
@@ -14,7 +14,8 @@ const TabsLayout = () => {
                 tabBarStyle: {
                     position: 'absolute',
                     top: 0,
-                    height: 72,
+                    minHeight: 70,
+                    maxHeight: 70,
                     backgroundColor: theme.colors.background,
                     paddingBottom: 10,
                     alignItems: 'center',
@@ -26,25 +27,43 @@ const TabsLayout = () => {
             initialRouteName='home'
         >
             <Tabs.Screen name='home' options={{
-                tabBarIcon: ({ color, focused }) => (
+                tabBarIcon: ({ focused }) => (
                     <View style={{
                         alignItems: "center",
                         paddingTop: 10
                     }}>
                         <MaterialCommunityIcons
-                            name={focused ? 'play-circle' : 'play-outline'}
+                            name={focused ? 'cake-variant' : 'cake-variant-outline'}
                             color={focused ? theme.colors.tertiary : theme.colors.primary}
                             size={24}
                         />
                     </View>
                 ),
-                tabBarLabel: "Play Game",
+                tabBarLabel: "Game",
                 tabBarLabelStyle: {
                     fontSize: 14,
                 }
             }} />
+            <Tabs.Screen name='results' options={{
+                tabBarIcon: ({ focused }) => (
+                    <View style={{
+                        alignItems: "center",
+                        paddingTop: 10
+                    }}>
+                        <MaterialCommunityIcons
+                            name={focused ? 'clipboard-text-clock' : 'clipboard-text-clock-outline'}
+                            color={focused ? theme.colors.tertiary : theme.colors.primary}
+                            size={24}
+                        />
+                    </View>
+                ),
+                tabBarLabel: "Results",
+                tabBarLabelStyle: {
+                    fontSize: 14
+                }
+            }} />
             <Tabs.Screen name='livedraw' options={{
-                tabBarIcon: ({ color, focused }) => (
+                tabBarIcon: ({ focused }) => (
                     <View style={{
                         alignItems: "center",
                         paddingTop: 10
@@ -59,6 +78,24 @@ const TabsLayout = () => {
                 tabBarLabel: "Live Draw",
                 tabBarLabelStyle: {
                     fontSize: 14
+                }
+            }} />
+            <Tabs.Screen name='etickets' options={{
+                tabBarIcon: ({ focused }) => (
+                    <View style={{
+                        alignItems: "center",
+                        paddingTop: 10
+                    }}>
+                        <MaterialCommunityIcons
+                            name={focused ? 'ticket-confirmation' : 'ticket-confirmation-outline'}
+                            color={focused ? theme.colors.tertiary : theme.colors.primary}
+                            size={24}
+                        />
+                    </View>
+                ),
+                tabBarLabel: "e-Tickets",
+                tabBarLabelStyle: {
+                    fontSize: 14,
                 }
             }} />
         </Tabs>
