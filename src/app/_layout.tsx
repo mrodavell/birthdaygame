@@ -5,7 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppDarkTheme, AppDefaultTheme } from '../constants/Theme';
 import { ThemeProvider } from "@react-navigation/native";
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, } from 'react';
+import { useEffect, useState, } from 'react';
 import { supabase } from '../lib/supabase';
 import { useWalletStore } from '../zustand/wallet';
 import { useResultsStore } from '../zustand/results';
@@ -14,6 +14,7 @@ import { useUserStore } from '../zustand/user';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '../config/toast-config';
+import CongratsDialog from '../components/congratsdialog';
 
 // Tells Supabase Auth to continuously refresh the session automatically
 // if the app is in the foreground. When this is added, you will continue
@@ -36,9 +37,10 @@ export default function RootLayout() {
 
     const colorScheme = useColorScheme();
     const paperTheme = colorScheme === "dark" ? AppDarkTheme : AppDefaultTheme;
+    const isWin = useGameStore(state => state.isWin);
     const { fetchWallet } = useWalletStore();
     const { setResults } = useResultsStore();
-    const { checkWin, setTickets } = useGameStore();
+    const { checkWin, setTickets, setIsWin } = useGameStore();
     const { setUser } = useUserStore();
 
     const handleResult = (payload: any) => {
@@ -68,6 +70,9 @@ export default function RootLayout() {
         setTickets(JSON.parse(tickets ?? ""));
     }
 
+    const handleDismiss = () => {
+        setIsWin(false);
+    }
 
     useEffect(() => {
         checkSession();
@@ -99,6 +104,7 @@ export default function RootLayout() {
                         <Stack.Screen name='ticketdetails' />
                     </Stack>
                     <Toast autoHide={false} config={toastConfig} />
+                    {isWin && <CongratsDialog visible={isWin} onDismiss={handleDismiss} />}
                 </SafeAreaProvider>
             </ThemeProvider>
         </PaperProvider>

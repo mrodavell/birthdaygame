@@ -31,6 +31,8 @@ type TState = {
   draws: number;
   totalBet: number;
   transactions: TActivities[];
+  isWin: boolean;
+  totalWin: number;
 };
 
 type TActions = {
@@ -50,6 +52,8 @@ type TActions = {
   setTickets: (tickets: any) => void;
   handleActivities: (data: TActivities) => void;
   setActivities: (transactions: any) => void;
+  setIsWin: (value: boolean) => void;
+  setTotalWin: (value: number) => void;
 };
 
 const emptyBoard = [
@@ -116,6 +120,8 @@ const emptyBoard = [
 ];
 
 export const useGameStore = create<TState & TActions>((set, get) => ({
+  isWin: true,
+  totalWin: 0,
   boards: [
     {
       label: "A",
@@ -185,6 +191,12 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
   draws: 1,
   totalBet: 0,
   transactions: [],
+  setIsWin: (value: boolean) => {
+    set(() => ({ isWin: value }));
+  },
+  setTotalWin: (value: number) => {
+    set(() => ({ totalWin: value }));
+  },
   setSelectedBoardIndex: (index: number) => {
     set(() => ({ selectedBoardIndex: index }));
   },
@@ -235,57 +247,6 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
 
     get().handleActivities(transaction);
     get().getTotal();
-  },
-  checkWin: (combination: TResult) => {
-    const lockedInBoards = get().lockedInBoards;
-    const extractedBoards = lockedInBoards.map((obj) => {
-      return obj.board;
-    });
-    const combinationsWithBets = extractedBoards.map((obj, index) => {
-      return obj.map((value) => {
-        return {
-          bet: value.bet,
-          combinationDate: `${parseInt(value.combination.month)}-${parseInt(
-            value.combination.date ?? 0
-          )}`,
-          letters: value.combination.letters,
-          lettersCount: value.combination.letters.length,
-        };
-      });
-    });
-
-    const exist = combinationsWithBets.map((obj) => {
-      const res = combination.result.split("-");
-      const letter = res[res.length - 1];
-      const combiDate = `${res[0]}-${res[1]}`;
-      return obj.filter((obj) => {
-        if (obj.combinationDate === combiDate) {
-          if (obj.letters.includes(letter)) {
-            return true;
-          }
-        }
-      });
-    });
-
-    let totalWin = 0;
-    exist.map((value) => {
-      value.map((v) => {
-        if (v.bet !== "") {
-          totalWin += (parseInt(v.bet) * 720) / v.lettersCount;
-        }
-      });
-    });
-
-    if (totalWin > 0) {
-      useWalletStore.getState().deposit(totalWin, "Deposit Winnings");
-      Toast.show({
-        type: "win",
-        text1: "🎉 Congratulations 🎉",
-        text2: " You hit the winning combination",
-      });
-    }
-
-    set(() => ({ lockedInBoards: [] }));
   },
   lockedIn: () => {
     const boards = get().boards;
@@ -414,7 +375,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
       }
       return total + parseInt(emptyBet);
     }, 0);
-    console.log(totalBet);
+
     set(() => ({ totalBet: totalBet * draws }));
   },
   updateDraws: (draws: number) => {
@@ -453,5 +414,58 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
   },
   setActivities: (transactions: any) => {
     set(() => ({ transactions: [...(transactions ?? [])] }));
+  },
+  checkWin: (combination: TResult) => {
+    const lockedInBoards = get().lockedInBoards;
+    const extractedBoards = lockedInBoards.map((obj) => {
+      return obj.board;
+    });
+    const combinationsWithBets = extractedBoards.map((obj, index) => {
+      return obj.map((value) => {
+        return {
+          bet: value.bet,
+          combinationDate: `${parseInt(value.combination.month)}-${parseInt(
+            value.combination.date ?? 0
+          )}`,
+          letters: value.combination.letters,
+          lettersCount: value.combination.letters.length,
+        };
+      });
+    });
+
+    const exist = combinationsWithBets.map((obj) => {
+      const res = combination.result.split("-");
+      const letter = res[res.length - 1];
+      const combiDate = `${res[0]}-${res[1]}`;
+      return obj.filter((obj) => {
+        if (obj.combinationDate === combiDate) {
+          if (obj.letters.includes(letter)) {
+            return true;
+          }
+        }
+      });
+    });
+
+    let totalWin = 0;
+    exist.map((value) => {
+      value.map((v) => {
+        if (v.bet !== "") {
+          totalWin += (parseInt(v.bet) * 720) / v.lettersCount;
+        }
+      });
+    });
+
+    if (totalWin > 0) {
+      useWalletStore.getState().deposit(totalWin, "Deposit Winnings");
+      set(() => ({ totalWin: totalWin }));
+      set(() => ({ isWin: true }));
+      // Toast.show({
+      //   type: "win",
+      //   text1: "🎉 Congratulations 🎉",
+      //   text2: " You won: " + totalWin,
+      // });
+    }
+
+    set(() => ({ lockedInBoards: [] }));
   },
 }));

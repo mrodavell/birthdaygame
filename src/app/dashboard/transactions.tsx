@@ -44,7 +44,7 @@ export default function transactions() {
                     {transactions.length === 0 && <View style={{ minHeight: dimensions.height * 0.5, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                         <Text style={{ fontSize: 20 }}>No transactions to view</Text>
                     </View>}
-                    {transactions.map((value, index) => {
+                    {transactions.reverse().map((value, index) => {
                         return <TouchableOpacity activeOpacity={1} key={`results-${index}`} style={{ marginTop: 15 }}>
                             <View>
                                 <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}>

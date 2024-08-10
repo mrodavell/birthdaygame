@@ -36,7 +36,7 @@ export default function Home() {
     const draws = useGameStore((state) => state.draws);
     const lockedInBoard = useGameStore((state) => state.lockedInBoards);
     const { deposit, withdraw } = useWalletStore();
-    const { getTotal, updateDraws, lockedIn, handleResetBoard } = useGameStore();
+    const { updateDraws, lockedIn, handleResetBoard } = useGameStore();
 
     const handleAmountSelect = (amount: string) => {
         if (amount === "") {
