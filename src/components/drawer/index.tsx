@@ -7,10 +7,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '../../lib/supabase'
 import { useState } from 'react'
 import Indicator from '../indicator'
+import { useUserStore } from '../../zustand/user'
 
 export default function DrawerContent(props: any) {
 
     const year = new Date().getFullYear();
+    const phone = useUserStore((state) => state.phone);
     const [logout, setLogout] = useState<boolean>(false);
 
     const handleLogout = async () => {
@@ -49,7 +51,7 @@ export default function DrawerContent(props: any) {
                 >
                     {/* <Avatar.Icon icon="account-circle" size={100} /> */}
                     <Image source={require('../../../assets/logo.png')} style={{ alignSelf: 'center', height: 150, width: 150 }} />
-                    <Text style={{ marginTop: 15 }}>John Doe</Text>
+                    <Text style={{ marginTop: 15 }}>+{phone}</Text>
                 </View>
                 <DrawerItemList {...props} />
                 <DrawerItem

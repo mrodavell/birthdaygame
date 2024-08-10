@@ -24,7 +24,7 @@ export default function results() {
     const getResult = async () => {
         try {
             setFetching(true);
-            const { data, error } = await supabase.from('drawresult').select().limit(5);
+            const { data, error } = await supabase.from('drawresult').select().order('id', { ascending: false }).limit(8);
             if (error) {
                 Alert.alert('Error', 'Unable to fetch data from server');
                 return;

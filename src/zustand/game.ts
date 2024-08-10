@@ -120,7 +120,7 @@ const emptyBoard = [
 ];
 
 export const useGameStore = create<TState & TActions>((set, get) => ({
-  isWin: true,
+  isWin: false,
   totalWin: 0,
   boards: [
     {
