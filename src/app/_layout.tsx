@@ -62,11 +62,18 @@ export default function RootLayout() {
     }
 
     const getTickets = async () => {
+        await AsyncStorage.removeItem('tickets');
         const tickets = await AsyncStorage.getItem('tickets') ?? "";
         if (tickets === "") {
             setTickets([]);
             return;
         }
+
+        if (!tickets) {
+            setTickets([]);
+            return;
+        }
+
         setTickets(JSON.parse(tickets ?? ""));
     }
 

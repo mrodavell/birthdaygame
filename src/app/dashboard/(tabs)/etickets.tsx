@@ -6,6 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { TTicket } from '../../../types/game';
 import dayjs from 'dayjs';
+import { Fragment } from 'react';
 
 export default function eticket() {
     const router = useRouter();
@@ -25,13 +26,15 @@ export default function eticket() {
                     {tickets.length === 0 && <View style={{ minHeight: dimensions.height * 0.5, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                         <Text style={{ fontSize: 20 }}>No tickets to view</Text>
                     </View>}
-                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10 }}>
-                        <MaterialCommunityIcons name='qrcode' size={20} style={{ marginRight: 8 }} />
-                        <Text style={{ fontSize: 20 }}>
-                            Tickets Log
-                        </Text>
-                    </View>
-                    <Divider style={{ flex: 1, height: 1, marginHorizontal: 10, marginTop: 10 }} />
+                    {tickets.length !== 0 && <Fragment>
+                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10 }}>
+                            <MaterialCommunityIcons name='qrcode' size={20} style={{ marginRight: 8 }} />
+                            <Text style={{ fontSize: 20 }}>
+                                Tickets Log
+                            </Text>
+                        </View>
+                        <Divider style={{ flex: 1, height: 1, marginHorizontal: 10, marginTop: 10 }} />
+                    </Fragment>}
                     {tickets.reverse().map((value, index) => {
                         return <TouchableOpacity activeOpacity={1} key={`results-${index}`} style={{ marginTop: 15 }} onPress={() => handleNavigation(value)}>
                             <View>
