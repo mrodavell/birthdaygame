@@ -61,7 +61,7 @@ export default function Main() {
           <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', gap: 10, marginTop: 20 }}>
             <Text>Accredited By</Text>
             <Image source={require("../../assets/pagcor.png")} style={{ alignSelf: 'center', height: 70, width: 70 }} />
-            <Text variant="titleLarge" style={{ marginTop: 20 }}>Demo App Only</Text>
+            {/* <Text variant="titleLarge" style={{ marginTop: 20 }}>Demo App Only</Text> */}
           </View>
           <ShareGame />
           <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', gap: 10, marginBottom: 10 }}>

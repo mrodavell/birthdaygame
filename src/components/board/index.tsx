@@ -53,11 +53,13 @@ const Board: FC<TBoardProps> = ({
                         }}
                     >
                         <View style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', minWidth: 20, justifyContent: 'flex-start' }}>
-                                <Text variant='titleMedium' style={{ fontSize: 12 }}>
-                                    {data?.label}
-                                </Text>
-                            </View>
+                            {!data?.combination.month &&
+                                <View style={{ flexDirection: 'row', alignItems: 'center', minWidth: 20, justifyContent: 'flex-start' }}>
+                                    <Text variant='titleMedium' style={{ fontSize: 12 }}>
+                                        {data?.label}
+                                    </Text>
+                                </View>
+                            }
                             <View style={{ flex: 1, flexDirection: 'row', gap: 20 }}>
                                 {!data?.combination.month &&
                                     <View style={{ padding: 5, alignItems: 'center', flexDirection: 'row', flex: 1 }}>
@@ -81,7 +83,7 @@ const Board: FC<TBoardProps> = ({
                                         </Text>
                                     </Card>
                                 }
-                                {(data?.combination.letters.length ?? 0) > 0 &&
+                                {data?.combination.month && (data?.combination.letters.length ?? 0) > 0 &&
                                     <Card key={`letter-${index}`} style={{ padding: 5, width: 70, alignItems: 'center' }}>
                                         <Text style={{ fontSize: 15 }}>
                                             {data?.combination.letters.join(', ')}

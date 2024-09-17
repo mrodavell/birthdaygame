@@ -459,11 +459,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
       useWalletStore.getState().deposit(totalWin, "Deposit Winnings");
       set(() => ({ totalWin: totalWin }));
       set(() => ({ isWin: true }));
-      // Toast.show({
-      //   type: "win",
-      //   text1: "🎉 Congratulations 🎉",
-      //   text2: " You won: " + totalWin,
-      // });
+      set(() => ({ totalBet: 0 }));
     }
 
     set(() => ({ lockedInBoards: [] }));

@@ -9,7 +9,7 @@ type TQRCodeProps = {
 }
 
 export default function QRCodeTicket({ serial, drawdate, drawnumber, datepurchased, phone }: TQRCodeProps) {
-
+    console.debug('QRCodeTicket', serial, drawdate, drawnumber, datepurchased, phone);
     const logo = require('../../../assets/logo.png');
 
     return (
