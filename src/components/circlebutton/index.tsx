@@ -53,16 +53,16 @@ const CircleButton: FC<TCircleButtonProps> = ({ label, index, month, letters, da
                     </Text>
                     <Text>
                         {
-                            label.toLowerCase() === "a" && "Alpha"
+                            label.toLowerCase() === "f" && "Father"
                         }
                         {
-                            label.toLowerCase() === "b" && "Beta"
+                            label.toLowerCase() === "m" && "Mother"
                         }
                         {
-                            label.toLowerCase() === "c" && "Charlie"
+                            label.toLowerCase() === "s" && "Son"
                         }
                         {
-                            label.toLowerCase() === "d" && "Delta"
+                            label.toLowerCase() === "d" && "Daughter"
                         }
                     </Text>
                 </View>

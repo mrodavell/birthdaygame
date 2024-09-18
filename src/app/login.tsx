@@ -8,6 +8,7 @@ import { AuthSchema } from '../schemas/auth';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '../lib/supabase';
 import ShareGame from '../components/sharegame';
+import { useUserStore } from '../zustand/user';
 
 export default function login() {
 
@@ -17,6 +18,7 @@ export default function login() {
     const { bottom } = useSafeAreaInsets();
     const [showPass, setShowPass] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
+    const { setUser } = useUserStore();
 
     const formik = useFormik({
         initialValues: {
@@ -40,6 +42,7 @@ export default function login() {
                 })
 
                 if (!error) {
+                    setUser(mobile);
                     router.push('dashboard');
                 }
 

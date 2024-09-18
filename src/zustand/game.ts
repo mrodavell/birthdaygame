@@ -3,7 +3,7 @@ import { create } from "zustand";
 import { TBet, TBoard, TTicket } from "../types/game";
 import { useWalletStore } from "./wallet";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Toast from "react-native-toast-message";
+import { prizeMoney } from "../constants/App";
 
 type TActivities = {
   type: string;
@@ -33,6 +33,7 @@ type TState = {
   transactions: TActivities[];
   isWin: boolean;
   totalWin: number;
+  winCombination: string;
 };
 
 type TActions = {
@@ -122,6 +123,7 @@ const emptyBoard = [
 export const useGameStore = create<TState & TActions>((set, get) => ({
   isWin: false,
   totalWin: 0,
+  winCombination: "",
   boards: [
     {
       label: "A",
@@ -450,7 +452,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
     exist.map((value) => {
       value.map((v) => {
         if (v.bet !== "") {
-          totalWin += (parseInt(v.bet) * 720) / v.lettersCount;
+          totalWin += (parseInt(v.bet) * prizeMoney) / v.lettersCount;
         }
       });
     });
@@ -460,6 +462,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
       set(() => ({ totalWin: totalWin }));
       set(() => ({ isWin: true }));
       set(() => ({ totalBet: 0 }));
+      set(() => ({ winCombination: combination.result }));
     }
 
     set(() => ({ lockedInBoards: [] }));

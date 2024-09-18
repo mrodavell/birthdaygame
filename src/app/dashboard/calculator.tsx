@@ -79,16 +79,16 @@ export default function calculator() {
                         </Text>
                     </View>
                     <View style={{ borderRadius: 0, flex: 1, justifyContent: 'space-around', alignItems: 'center', flexDirection: 'row', marginTop: 10, gap: 10 }}>
-                        <Button mode={letters.includes("A") ? "contained" : "outlined"} style={{ flex: 1 }} onPress={() => handleLetters("A")}>
-                            <Text style={{ fontSize: 18 }}>A</Text>
+                        <Button mode={letters.includes("F") ? "contained" : "outlined"} style={{ flex: 1 }} onPress={() => handleLetters("F")}>
+                            <Text style={{ fontSize: 18 }}>F</Text>
                         </Button>
-                        <Button mode={letters.includes("B") ? "contained" : "outlined"} style={{ flex: 1 }} onPress={() => handleLetters("B")}>
-                            <Text style={{ fontSize: 18 }}>B</Text>
+                        <Button mode={letters.includes("M") ? "contained" : "outlined"} style={{ flex: 1 }} onPress={() => handleLetters("M")}>
+                            <Text style={{ fontSize: 18 }}>M</Text>
                         </Button>
                     </View>
                     <View style={{ borderRadius: 0, flex: 1, justifyContent: 'space-around', alignItems: 'center', flexDirection: 'row', marginTop: 10, gap: 10 }}>
-                        <Button mode={letters.includes("C") ? "contained" : "outlined"} style={{ flex: 1 }} onPress={() => handleLetters("C")}>
-                            <Text style={{ fontSize: 18 }}>C</Text>
+                        <Button mode={letters.includes("S") ? "contained" : "outlined"} style={{ flex: 1 }} onPress={() => handleLetters("S")}>
+                            <Text style={{ fontSize: 18 }}>S</Text>
                         </Button>
                         <Button mode={letters.includes("D") ? "contained" : "outlined"} style={{ flex: 1 }} onPress={() => handleLetters("D")}>
                             <Text style={{ fontSize: 18 }}>D</Text>
