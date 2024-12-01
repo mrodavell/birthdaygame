@@ -26,7 +26,7 @@ const AppBottomSheet = forwardRef<Ref, TAppBottomSheetProps>((props, ref) => {
                 backgroundStyle={{ borderTopColor: theme.colors.inversePrimary, borderTopWidth: 2 }}
                 handleIndicatorStyle={{ borderRadius: 0, backgroundColor: theme.colors.inversePrimary }}
             >
-                <View style={{ flex: 1, flexGrow: 1, flexDirection: 'column' }}>
+                <View style={{ flex: 1, flexDirection: 'column' }}>
                     {children}
                 </View>
             </BottomSheetModal>

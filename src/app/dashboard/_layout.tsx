@@ -4,8 +4,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DrawerContent from '../../components/drawer';
 import 'react-native-gesture-handler';
-import { Alert, Share, View } from 'react-native';
+import { Alert, Share, View, Image } from 'react-native';
 import { TouchableOpacity } from '@gorhom/bottom-sheet';
+import { heightScale, moderateWs, widthScale } from '../../helpers/scaler';
 
 const DashboardLayout = () => {
 
@@ -25,7 +26,27 @@ const DashboardLayout = () => {
             <Drawer
                 drawerContent={DrawerContent}
                 screenOptions={{
-                    headerTitle: "BIRTHDAY GAME",
+                    drawerStatusBarAnimation: 'none',
+                    headerTitle: () =>
+                        <View style={{
+                            flex: 1,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: widthScale(5),
+                            margin: widthScale(5),
+                            borderRadius: 8,
+                        }}>
+                            <Image
+                                source={require('../../../assets/logo.png')}
+                                style={{
+                                    alignSelf: 'center',
+                                    marginTop: heightScale(20),
+                                    height: heightScale(70),
+                                    width: widthScale(70)
+                                }}
+                            />
+                        </View>,
                     headerTitleAlign: 'center',
                     headerTitleStyle: {
                         color: theme.colors.inverseOnSurface,
@@ -34,22 +55,20 @@ const DashboardLayout = () => {
                             width: 1,
                             height: 2,
                         },
+                        fontSize: moderateWs(16, 1)
                     },
                     headerStyle: {
                         backgroundColor: theme.colors.primary,
                     },
                     drawerHideStatusBarOnOpen: false,
-                    drawerLabelStyle: {
-                        marginLeft: -20
-                    },
                     headerRight: () => (
                         <TouchableOpacity activeOpacity={1} onPress={onShare}>
                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <Text style={{ color: theme.colors.surface }}>Share</Text>
-                                <IconButton icon="share" style={{ marginLeft: -5 }} iconColor={theme.colors.surface} />
+                                <Text style={{ color: 'white', fontSize: moderateWs(12, 1) }}>Share</Text>
+                                <IconButton icon="share" size={moderateWs(14, 1)} style={{ marginLeft: -5 }} iconColor='white' />
                             </View>
                         </TouchableOpacity>
-                    )
+                    ),
                 }}
             >
                 <Drawer.Screen name='(tabs)' options={{

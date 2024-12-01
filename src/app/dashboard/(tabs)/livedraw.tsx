@@ -3,6 +3,7 @@ import { Button, Card, Divider, Text, TextInput, useTheme } from 'react-native-p
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import YoutubeLive from '../../../components/youtubelive';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { heightScale } from '../../../helpers/scaler';
 
 export default function livedraw() {
 
@@ -11,7 +12,7 @@ export default function livedraw() {
     const theme = useTheme();
 
     return (
-        <SafeAreaView style={{ flex: 1, flexGrow: 1, flexDirection: 'column', paddingHorizontal: 10, marginTop: top, marginBottom: bottom, justifyContent: 'flex-start' }}>
+        <SafeAreaView style={{ flex: 1, flexGrow: 1, flexDirection: 'column', paddingHorizontal: 10, marginTop: heightScale(top + 40), marginBottom: bottom, justifyContent: 'flex-start' }}>
             <ScrollView style={{ maxHeight: dimensions.height }} showsVerticalScrollIndicator={false}>
                 <View style={{ marginBottom: 30, flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <YoutubeLive />

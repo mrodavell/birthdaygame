@@ -1,109 +1,117 @@
 import { View, useWindowDimensions, SafeAreaView, ScrollView, Image } from 'react-native'
 import React from 'react'
-import { useTheme, Text, Divider, Card, Title } from 'react-native-paper';
+import { Text, Divider, Card } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { heightScale, moderateWs, widthScale } from '../../helpers/scaler';
 
 export default function howtoplay() {
 
-    const theme = useTheme();
     const dimensions = useWindowDimensions();
     const screenHeight = dimensions.height;
     const { bottom } = useSafeAreaInsets();
 
     return (
         <SafeAreaView style={{ flex: 1, flexGrow: 1, flexDirection: 'column', paddingHorizontal: 10, marginTop: 10, marginBottom: bottom, justifyContent: 'flex-start' }}>
-            <ScrollView style={{ maxHeight: screenHeight }}>
-                <View style={{ flex: 1, padding: 10, marginTop: 10 }}>
-                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                        <MaterialCommunityIcons name='dice-3' size={20} style={{ marginRight: 8 }} />
-                        <Text style={{ fontSize: 20 }}>
-                            How to Play
-                        </Text>
-                    </View>
-                    <Divider style={{ flex: 1, height: 1, marginHorizontal: 10, marginTop: 10, marginBottom: 10 }} />
-                    <Text style={{ fontSize: 14, fontWeight: 'bold', marginTop: 15 }}>
+            <View style={{ flex: 1, padding: widthScale(10), marginTop: heightScale(10) }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                    <MaterialCommunityIcons name='dice-3' size={20} style={{ marginRight: 8 }} />
+                    <Text style={{ fontSize: moderateWs(20, 1) }}>
+                        How to Play
+                    </Text>
+                </View>
+                <Divider style={{ marginHorizontal: widthScale(10), marginTop: heightScale(10), marginBottom: heightScale(10) }} />
+                <ScrollView style={{ maxHeight: screenHeight, marginHorizontal: widthScale(2), paddingHorizontal: widthScale(2) }}>
+                    <Text style={{ fontSize: moderateWs(14, 1), fontWeight: 'bold', marginTop: widthScale(15), color: 'black' }}>
                         Step 1: Check if betting time is still open.
                     </Text>
-                    <Card style={{ marginTop: 10 }}>
+                    <View style={{ marginTop: heightScale(10), backgroundColor: 'white' }}>
                         <Card.Content style={{ flex: 1, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
-                            <Image source={require('../../../assets/steps/step1.png')} style={{ width: 350, height: 70 }} />
+                            <Image source={require('../../../assets/steps/step1.png')} style={{ width: widthScale(300), height: widthScale(40) }} />
                         </Card.Content>
-                    </Card>
-                    <Text style={{ fontSize: 14, fontWeight: 'bold', marginTop: 15 }}>
+                    </View>
+                    <Text style={{ fontSize: moderateWs(14, 1), fontWeight: 'bold', marginTop: widthScale(40), color: 'black' }}>
                         Step 2: Make sure you have a balance in your wallet.
                     </Text>
-                    <Card style={{ marginTop: 10 }}>
+                    <View style={{ marginTop: heightScale(10), backgroundColor: 'white' }}>
                         <Card.Content style={{ flex: 1, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
-                            <Image source={require('../../../assets/steps/step2.png')} style={{ width: 350, height: 70 }} />
+                            <Image source={require('../../../assets/steps/step2.png')} style={{ width: widthScale(300), height: widthScale(120) }} />
                         </Card.Content>
-                    </Card>
-                    <Text style={{ fontSize: 14, fontWeight: 'bold', marginTop: 15 }}>
-                        Step 3: Select your combination.
+                    </View>
+                    <Text style={{ fontSize: moderateWs(14, 1), fontWeight: 'bold', marginTop: widthScale(40), color: 'black' }}>
+                        Step 3: Select draw schedule/s.
                     </Text>
-                    <Card style={{ marginTop: 10 }}>
+                    <View style={{ marginTop: heightScale(10), backgroundColor: 'white' }}>
                         <Card.Content style={{ flex: 1, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
-                            <Image source={require('../../../assets/steps/step3.png')} style={{ width: 350, height: 50 }} />
+                            <Image source={require('../../../assets/steps/step3.png')} style={{ width: widthScale(300), height: widthScale(60) }} />
                         </Card.Content>
-                    </Card>
-                    <Text style={{ fontSize: 14, fontWeight: 'bold', marginTop: 15 }}>
-                        Step 4: Select Month.
+                    </View>
+                    <Text style={{ fontSize: moderateWs(14, 1), fontWeight: 'bold', marginTop: widthScale(40), color: 'black' }}>
+                        Step 4: Tap on the board and pick your combination.
                     </Text>
-                    <Card style={{ marginTop: 10 }}>
+                    <View style={{ marginTop: heightScale(10), backgroundColor: 'white' }}>
                         <Card.Content style={{ flex: 1, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
-                            <Image source={require('../../../assets/steps/step4.png')} style={{ width: 350, height: 130 }} />
+                            <Image source={require('../../../assets/steps/step3.1.png')} style={{ width: widthScale(300), height: widthScale(50) }} />
                         </Card.Content>
-                    </Card>
-                    <Text style={{ fontSize: 14, fontWeight: 'bold', marginTop: 15 }}>
-                        Step 5: Select Date.
+                    </View>
+                    <Text style={{ fontSize: moderateWs(14, 1), fontWeight: 'bold', marginTop: widthScale(40), color: 'black' }}>
+                        Step 5: Select a month.
                     </Text>
-                    <Card style={{ marginTop: 10 }}>
+                    <View style={{ marginTop: heightScale(10), backgroundColor: 'white' }}>
                         <Card.Content style={{ flex: 1, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
-                            <Image source={require('../../../assets/steps/step4.1.png')} style={{ width: 350, height: 150 }} />
+                            <Image source={require('../../../assets/steps/step4.png')} style={{ width: widthScale(300), height: widthScale(130) }} />
                         </Card.Content>
-                    </Card>
-                    <Text style={{ fontSize: 14, fontWeight: 'bold', marginTop: 15 }}>
+                    </View>
+                    <Text style={{ fontSize: moderateWs(14, 1), fontWeight: 'bold', marginTop: widthScale(40), color: 'black' }}>
+                        Step 5: Select a date.
+                    </Text>
+                    <View style={{ marginTop: heightScale(10), backgroundColor: 'white' }}>
+                        <Card.Content style={{ flex: 1, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
+                            <Image source={require('../../../assets/steps/step4.1.png')} style={{ width: widthScale(300), height: widthScale(290) }} />
+                        </Card.Content>
+                    </View>
+                    <Text style={{ fontSize: moderateWs(14, 1), fontWeight: 'bold', marginTop: widthScale(40), color: 'black' }}>
                         Step 6: Multi-select Letter/s.
                     </Text>
-                    <Card style={{ marginTop: 10 }}>
+                    <View style={{ marginTop: heightScale(10), backgroundColor: 'white' }}>
                         <Card.Content style={{ flex: 1, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
-                            <Image source={require('../../../assets/steps/step4.2.png')} style={{ width: 350, height: 130 }} />
+                            <Image source={require('../../../assets/steps/step4.2.png')} style={{ width: widthScale(300), height: widthScale(160) }} />
                         </Card.Content>
-                    </Card>
-                    <Text style={{ fontSize: 14, fontWeight: 'bold', marginTop: 15 }}>
+                    </View>
+                    <Text style={{ fontSize: moderateWs(14, 1), fontWeight: 'bold', marginTop: widthScale(40), color: 'black' }}>
                         Step 7: Set your bet.
                     </Text>
-                    <Card style={{ marginTop: 10 }}>
+                    <View style={{ marginTop: heightScale(10), backgroundColor: 'white' }}>
                         <Card.Content style={{ flex: 1, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
-                            <Image source={require('../../../assets/steps/step4.3.png')} style={{ width: 350, height: 100 }} />
+                            <Image source={require('../../../assets/steps/step4.3.png')} style={{ width: widthScale(320), height: widthScale(150) }} />
                         </Card.Content>
-                    </Card>
-                    <Text style={{ fontSize: 14, fontWeight: 'bold', marginTop: 15 }}>
+                    </View>
+                    <Text style={{ fontSize: moderateWs(14, 1), fontWeight: 'bold', marginTop: widthScale(40), color: 'black' }}>
                         Step 8: Confirm your bet
                     </Text>
-                    <Card style={{ marginTop: 10 }}>
+                    <View style={{ marginTop: heightScale(10), backgroundColor: 'white' }}>
                         <Card.Content style={{ flex: 1, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
-                            <Image source={require('../../../assets/steps/step5.png')} style={{ width: 350, height: 150 }} />
+                            <Image source={require('../../../assets/steps/step5.png')} style={{ width: widthScale(325), height: widthScale(120) }} />
                         </Card.Content>
-                    </Card>
-                    <Text style={{ fontSize: 14, fontWeight: 'bold', marginTop: 15 }}>
+                    </View>
+                    <Text style={{ fontSize: moderateWs(14, 1), fontWeight: 'bold', marginTop: widthScale(40), color: 'black' }}>
                         Step 9: Adjust draws or bet
                     </Text>
-                    <Card style={{ marginTop: 10 }}>
+                    <View style={{ marginTop: heightScale(10), backgroundColor: 'white' }}>
                         <Card.Content style={{ flex: 1, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
-                            <Image source={require('../../../assets/steps/step6.png')} style={{ width: 350, height: 150 }} />
+                            <Image source={require('../../../assets/steps/step6.png')} style={{ width: widthScale(300), height: widthScale(60) }} />
                         </Card.Content>
-                    </Card>
-                    <Text style={{ fontSize: 14, fontWeight: 'bold', marginTop: 15 }}>
+                    </View>
+                    <Text style={{ fontSize: moderateWs(14, 1), fontWeight: 'bold', marginTop: widthScale(40), color: 'black' }}>
                         Step 10: Lock in your bet
                     </Text>
-                    <Card style={{ marginTop: 10 }}>
+                    <View style={{ marginTop: heightScale(10), backgroundColor: 'white', marginBottom: heightScale(20) }}>
                         <Card.Content style={{ flex: 1, justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
-                            <Image source={require('../../../assets/steps/step7.png')} style={{ width: 350, height: 70 }} />
+                            <Image source={require('../../../assets/steps/step7.png')} style={{ width: widthScale(300), height: widthScale(40) }} />
                         </Card.Content>
-                    </Card>
-                </View>
-            </ScrollView>
+                    </View>
+                </ScrollView>
+            </View>
         </SafeAreaView>
     )
 }

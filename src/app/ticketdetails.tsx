@@ -112,7 +112,6 @@ const TicketDetails = () => {
                         <Text variant='titleSmall' style={{ marginTop: 10 }}>QR Code Serial No.{serial}</Text>
                     </View>
                 </View>
-                <Button mode='contained' style={{ marginHorizontal: 20, marginTop: 20 }} onPress={handleDownload}>Download</Button>
                 <Button style={{ marginHorizontal: 20, marginTop: 20 }} onPress={() => router.back()} labelStyle={{ fontSize: 18 }}>Go Back</Button>
             </ScrollView>
         </SafeAreaView>

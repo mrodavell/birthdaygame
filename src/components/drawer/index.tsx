@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase'
 import { useState } from 'react'
 import Indicator from '../indicator'
 import { useUserStore } from '../../zustand/user'
+import { heightScale, widthScale } from '../../helpers/scaler'
 
 export default function DrawerContent(props: any) {
 
@@ -19,10 +20,8 @@ export default function DrawerContent(props: any) {
 
         try {
             setLogout(true);
-            const { error } = await supabase.auth.signOut();
-            if (!error) {
-                router.push("login");
-            }
+            await supabase.auth.signOut();
+            router.push("login");
 
         } catch (e) {
             console.log(e)
@@ -49,8 +48,14 @@ export default function DrawerContent(props: any) {
                         paddingBottom: 20
                     }}
                 >
-                    {/* <Avatar.Icon icon="account-circle" size={100} /> */}
-                    <Image source={require('../../../assets/logo.png')} style={{ alignSelf: 'center', height: 150, width: 150 }} />
+                    <Image
+                        source={require('../../../assets/logo.png')}
+                        style={{
+                            alignSelf: 'center',
+                            height: heightScale(100),
+                            width: widthScale(100)
+                        }}
+                    />
                     <Text style={{ marginTop: 15 }}>+{phone}</Text>
                 </View>
                 <DrawerItemList {...props} />
@@ -59,7 +64,6 @@ export default function DrawerContent(props: any) {
                     icon={({ color, size }) => (
                         <MaterialCommunityIcons name='logout' color={color} size={size} />
                     )}
-                    labelStyle={{ marginLeft: -20 }}
                     onPress={handleLogout}
                 />
             </DrawerContentScrollView>

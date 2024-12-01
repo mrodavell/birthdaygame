@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { View, Share, Alert } from 'react-native';
 import { Button, Text, useTheme } from 'react-native-paper';
+import { moderateWs } from '../../helpers/scaler';
 
 export default function ShareGame() {
 
@@ -16,10 +17,10 @@ export default function ShareGame() {
     };
 
     return (
-        <View style={{ flex: 1 }}>
+        <View>
             <Button onPress={onShare}>
-                <Text variant='titleMedium' style={{ marginTop: 5, color: theme.colors.tertiary }}>Share Game</Text>
-                <MaterialCommunityIcons name='share' color={theme.colors.tertiary} size={20} />
+                <Text variant='titleMedium' style={{ color: theme.colors.tertiary, fontSize: moderateWs(12, 1) }}>Share Game</Text>
+                <MaterialCommunityIcons name='share' color={theme.colors.tertiary} size={moderateWs(12, 1)} />
             </Button>
         </View>
     )

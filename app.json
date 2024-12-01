@@ -36,6 +36,7 @@
       "eas": {
         "projectId": "cb79f32c-05a7-4d80-bd09-a1bfd6faa48a"
       }
-    }
+    },
+    "newArchEnabled": true
   }
 }

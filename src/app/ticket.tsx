@@ -1,5 +1,5 @@
 import { View, SafeAreaView, ScrollView, useWindowDimensions, Alert } from 'react-native'
-import { Button, Text } from 'react-native-paper'
+import { Button, Text, useTheme } from 'react-native-paper'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useGameStore } from '../zustand/game';
 import dayjs from 'dayjs';
@@ -9,44 +9,48 @@ import { useRef } from 'react';
 import { router } from 'expo-router';
 import QRCodeTicket from '../components/qrcodeticket';
 import { useUserStore } from '../zustand/user';
+import { heightScale, moderateWs, widthScale } from '../helpers/scaler';
 
 const Ticket = () => {
 
-    const { bottom } = useSafeAreaInsets();
-    const dateTimePurchased = dayjs().format("DD-MMM-YY h:m A");
-    const drawNumber = `${dayjs().format('YYYYMMDD')}-${Math.floor(100000 + Math.random() * 900000)}`;
-    const drawDate = dayjs().format('MMM DD, YYYY');
-    const serial = `E${dayjs().format('YY')}-${dayjs().format('MM')}-${Math.floor(100000 + Math.random() * 900000)}-${dayjs().format('DD')}`;
-    const boards = useGameStore((state) => state.lockedInBoards)[0]?.board ?? [];
+    const theme = useTheme();
+    // states
+    const allLockeinBoards = useGameStore((state) => state.lockedInBoards);
+    const boards = allLockeinBoards[allLockeinBoards.length - 1]?.board ?? [];
+    const drawTimes = useGameStore((state) => state.lockedInBoards)[allLockeinBoards.length - 1]?.drawTime ?? [];
     const totalBet = useGameStore((state) => state.totalBet);
     const draws = useGameStore((state) => state.draws);
     const phone = useUserStore((state) => state.phone);
-    const { handleTickets } = useGameStore();
-    const dimensions = useWindowDimensions();
-    const screenHeight = dimensions.height;
+    const drawDate = dayjs().format('MMM DD, YYYY');
+    // date formatting
+    const dateTimePurchased = dayjs().format("DD-MMM-YY h:m A");
+    const drawNumber = `${dayjs().format('YYYYMMDD')}-${Math.floor(100000 + Math.random() * 900000)}`;
+    const serial = `E${dayjs().format('YY')}-${dayjs().format('MM')}-${Math.floor(100000 + Math.random() * 900000)}-${dayjs().format('DD')}`;
 
-    const drawTimes = Array.from({ length: draws }, (_, i) => dayjs().add(i * 3, 'hour').minute(0).format('h:mm A'));
-    const [status, requestPermission] = MediaLibrary.usePermissions();
+    // actions
+    const { handleTickets } = useGameStore();
+
+    // const [status, requestPermission] = MediaLibrary.usePermissions();
     const imageRef = useRef(null);
 
-    const handleDownload = async () => {
-        handleTicketStorage();
-        if (status === null) {
-            requestPermission();
-        }
+    // const handleDownload = async () => {
+    //     handleTicketStorage();
+    //     if (status === null) {
+    //         requestPermission();
+    //     }
 
-        try {
-            const localUri = await captureRef(imageRef);
-            await MediaLibrary.saveToLibraryAsync(localUri);
-            if (localUri) {
-                Alert.alert("e-Ticket", "e-Ticket was saved, please check your gallery.");
-                router.back();
-            }
-        } catch (e) {
-            console.log(e);
-        }
+    //     try {
+    //         const localUri = await captureRef(imageRef);
+    //         await MediaLibrary.saveToLibraryAsync(localUri);
+    //         if (localUri) {
+    //             Alert.alert("e-Ticket", "e-Ticket was saved, please check your gallery.");
+    //             router.back();
+    //         }
+    //     } catch (e) {
+    //         console.log(e);
+    //     }
 
-    }
+    // }
 
     const handleTicketStorage = () => {
         handleTickets({
@@ -66,28 +70,33 @@ const Ticket = () => {
         router.push('dashboard/(tabs)/etickets');
     }
 
+    const handleBack = () => {
+        handleTicketStorage();
+        router.back();
+    }
+
     return (
-        <SafeAreaView style={{ flex: 1, flexGrow: 1, flexDirection: 'column', paddingHorizontal: 10, marginTop: 40, marginBottom: bottom, justifyContent: 'flex-start' }}>
-            <ScrollView style={{ maxHeight: screenHeight }}>
+        <SafeAreaView style={{ flex: 1, paddingHorizontal: widthScale(10), justifyContent: 'flex-start' }}>
+            <ScrollView style={{ flex: 1 }} showsHorizontalScrollIndicator={false}>
                 <View tabIndex={-1} ref={imageRef} collapsable={false} style={{ backgroundColor: 'white' }}>
                     <View style={{ justifyContent: 'center', alignItems: "center", marginTop: 50 }}>
-                        <Text variant='titleLarge'>Happy Birthday Game</Text>
+                        <Text variant='titleLarge' style={{ fontSize: moderateWs(18, 1) }}>Happy Birthday Game</Text>
                     </View>
-                    <View style={{ justifyContent: 'center', alignItems: "center", marginTop: 30 }}>
-                        <Text variant='titleMedium'>Electronic Entry Ticket</Text>
+                    <View style={{ justifyContent: 'center', alignItems: "center", marginTop: heightScale(20) }}>
+                        <Text variant='titleMedium' style={{ fontSize: moderateWs(14, 1) }}>Electronic Entry Ticket</Text>
                     </View>
-                    <View style={{ marginTop: 30, marginHorizontal: 30 }}>
+                    <View style={{ marginTop: heightScale(30), marginHorizontal: widthScale(30) }}>
                         {boards.map((value, index) => {
                             return value.bet !== "" && <View key={`ticket-details-${index}`} style={{ marginTop: 10 }}>
                                 <View style={{ flexDirection: 'row' }}>
-                                    <Text variant='titleLarge'>{value.label}:</Text>
+                                    <Text variant='titleLarge' style={{ fontSize: moderateWs(16, 1) }}>{value.label}:</Text>
                                     <View style={{ flexDirection: 'row', marginLeft: 10, justifyContent: 'space-between', flex: 1 }}>
                                         <View style={{ flexDirection: "row", flex: 1 }}>
-                                            <Text variant='titleLarge' style={{ marginLeft: 20 }}>{value.combination.month}</Text>
-                                            <Text variant='titleLarge' style={{ marginLeft: 20 }}>{value?.combination.date.length == 1 ? `0${value?.combination.date}` : value?.combination.date}</Text>
-                                            <View style={{ flexDirection: 'row', marginLeft: 20 }}>
+                                            <Text variant='titleLarge' style={{ marginLeft: widthScale(15), fontSize: moderateWs(16, 1) }}>{value.combination.month}</Text>
+                                            <Text variant='titleLarge' style={{ marginLeft: widthScale(15), fontSize: moderateWs(16, 1) }}>{value?.combination.date.length == 1 ? `0${value?.combination.date}` : value?.combination.date}</Text>
+                                            <View style={{ flexDirection: 'row', marginLeft: widthScale(15) }}>
                                                 {(value?.combination.letters.length ?? 0) > 0 &&
-                                                    <Text variant='titleLarge'>
+                                                    <Text variant='titleLarge' style={{ fontSize: moderateWs(16, 1) }}>
                                                         {value?.combination.letters.join(' ')}
                                                     </Text>
                                                 }
@@ -96,9 +105,9 @@ const Ticket = () => {
                                         {value.bet !== "" &&
                                             <View style={{ flexDirection: "row", minWidth: 100, justifyContent: 'flex-end' }}>
                                                 <View style={{ flexDirection: 'row' }}>
-                                                    <Text variant='titleLarge'>P</Text>
-                                                    <Text variant='titleLarge' style={{ marginLeft: 5 }}>
-                                                        {parseFloat(value?.bet).toFixed(2)}
+                                                    <Text variant='titleLarge' style={{ fontSize: moderateWs(16, 1) }}>P</Text>
+                                                    <Text variant='titleLarge' style={{ marginLeft: widthScale(5), fontSize: moderateWs(16, 1) }}>
+                                                        {parseFloat(value?.bet)}
                                                     </Text>
                                                 </View>
                                             </View>
@@ -108,7 +117,7 @@ const Ticket = () => {
                             </View>
                         })}
                         <View style={{ display: 'flex', flexDirection: 'row', flexGrow: 1, alignItems: 'flex-end', justifyContent: 'flex-end', marginTop: 40 }}>
-                            <Text variant='titleLarge'>Total: P {parseFloat(totalBet.toString()).toFixed(2)}</Text>
+                            <Text variant='titleLarge' style={{ fontSize: moderateWs(16, 1) }}>Total: P {parseFloat(totalBet.toString()).toFixed(2)}</Text>
                         </View>
                         <View style={{ display: 'flex', flexDirection: 'row', flexGrow: 1, justifyContent: 'space-between', marginTop: 30 }}>
                             <View style={{ flexDirection: 'column', flex: 1 }}>
@@ -117,36 +126,38 @@ const Ticket = () => {
                                 <Text variant='titleMedium'>Draw Date: {drawDate}</Text>
                                 <View style={{ flexDirection: 'column', flex: 1 }}>
                                     <Text variant='titleMedium'>Draw Time: </Text>
-                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginLeft: widthScale(5) }}>
                                         {
                                             drawTimes.map((value, index) => {
-                                                return <Text key={`combinations-${index}`} style={{ fontSize: 16, marginTop: 2 }}>{value} {index === drawTimes.length - 1 ? '' : ', '}</Text>
+                                                return <Text key={`combinations-${index}`} style={{ fontSize: 16, marginTop: 2 }}>{`${value} ${parseInt(value) < 10 ? 'PM' : 'AM'}`} {index === drawTimes.length - 1 ? '' : ', '}</Text>
                                             })
                                         }
                                     </View>
                                 </View>
                             </View>
                         </View>
-                        <View style={{ display: 'flex', flexDirection: 'row', flexGrow: 1, justifyContent: 'space-between', marginTop: 30 }}>
+                        <View style={{ display: 'flex', flexDirection: 'row', flexGrow: 1, justifyContent: 'space-between', marginTop: heightScale(15) }}>
                             <View>
-                                <Text variant='titleMedium'>Date & Time Purchased: {dateTimePurchased}</Text>
+                                <Text variant='titleMedium'>Date & Time Purchased: </Text>
+                                <Text variant='titleSmall' style={{ marginLeft: widthScale(5) }}>{dateTimePurchased}</Text>
                             </View>
                         </View>
                     </View>
                     <View style={{ marginTop: 20, justifyContent: 'center', alignItems: 'center' }}>
                         <QRCodeTicket
                             phone={phone}
-                            datepurchased={dayjs().format("DD-MMM-YYYY")} drawdate=''
+                            datepurchased={dayjs().format("DD-MMM-YYYY")}
+                            drawdate=''
                             drawnumber={drawNumber}
                             serial={serial}
                         />
-                        <Text variant='titleSmall' style={{ marginTop: 10 }}>QR Code Serial No.{serial}</Text>
+                        <Text variant='titleSmall' style={{ marginTop: heightScale(10) }}>QR Code Serial No.{serial}</Text>
                     </View>
                 </View>
-                <Button mode='contained' style={{ marginHorizontal: 20, marginTop: 20 }} onPress={() => handleDownload()}>Download</Button>
-                <Button style={{ marginHorizontal: 20, marginTop: 20 }} onPress={() => handleNavigate()} labelStyle={{ fontSize: 18 }}>View Tickets</Button>
+                <Button mode='contained' style={{ marginHorizontal: widthScale(20), marginTop: heightScale(20) }} onPress={() => handleNavigate()} labelStyle={{ fontSize: 18 }}>View Tickets</Button>
+                <Button style={{ marginHorizontal: widthScale(20), marginTop: heightScale(10) }} onPress={() => handleBack()} labelStyle={{ fontSize: 18, color: theme.colors.primary }}>Go Back</Button>
             </ScrollView>
-        </SafeAreaView>
+        </SafeAreaView >
     )
 }
 

@@ -3,13 +3,14 @@ import { View, Image, useWindowDimensions, ScrollView } from "react-native";
 import { Button, Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ShareGame from "../components/sharegame";
+import { widthScale, heightScale, moderateWs } from "../helpers/scaler";
 
 export default function Main() {
 
   const year = new Date().getFullYear();
   const theme = useTheme();
   const dimensions = useWindowDimensions();
-  const screenHeight = dimensions.height;
+  const screenHeight = heightScale(dimensions.height);
 
   const handleNavigation = (path: string) => {
     router.push(path)
@@ -20,11 +21,13 @@ export default function Main() {
       <ScrollView style={{ maxHeight: screenHeight }} showsVerticalScrollIndicator={false}>
         <View style={{ flex: 1, flexGrow: 1, flexDirection: 'column', justifyContent: 'flex-start', gap: 20, marginTop: '15%' }}>
           <View style={{ padding: 20 }}>
-            <Image source={require("../../assets/logo.png")} style={{ alignSelf: 'center', height: 200, width: 200 }} />
+            <Image source={require("../../assets/logo.png")}
+              style={{ alignSelf: 'center', height: heightScale(150), width: widthScale(150) }}
+            />
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: -20, marginBottom: 10 }}>
             <Text style={{
-              fontSize: 40, fontWeight: "bold", color: "#F9DA83", textShadowColor: "#000000", textShadowRadius: 1,
+              fontSize: widthScale(25), fontWeight: "bold", color: "#F9DA83", textShadowColor: "#000000", textShadowRadius: 1,
               textShadowOffset: {
                 width: 3,
                 height: 2,
@@ -39,7 +42,8 @@ export default function Main() {
               onPress={() => handleNavigation('login')}
               buttonColor={theme.colors.tertiary}
               textColor={theme.colors.inverseOnSurface}
-              contentStyle={{ minHeight: 20 }}
+              contentStyle={{ minHeight: heightScale(20) }}
+              labelStyle={{ fontSize: moderateWs(12, 1) }}
               style={{ flexGrow: 1 }}
               elevation={5}
               mode="elevated"
@@ -50,7 +54,8 @@ export default function Main() {
               onPress={() => handleNavigation('register')}
               buttonColor={theme.colors.tertiary}
               textColor={theme.colors.inverseOnSurface}
-              contentStyle={{ minHeight: 20 }}
+              contentStyle={{ minHeight: heightScale(20) }}
+              labelStyle={{ fontSize: moderateWs(12, 1) }}
               style={{ flexGrow: 1 }}
               elevation={5}
               mode="elevated"
@@ -60,12 +65,20 @@ export default function Main() {
           </View>
           <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', gap: 10, marginTop: 20 }}>
             <Text>Accredited By</Text>
-            <Image source={require("../../assets/pagcor.png")} style={{ alignSelf: 'center', height: 70, width: 70 }} />
+            <Image
+              source={require("../../assets/pagcor.png")}
+              style={{
+                alignSelf: 'center',
+                height: heightScale(70),
+                width: widthScale(70),
+                marginTop: heightScale(10),
+              }}
+            />
             {/* <Text variant="titleLarge" style={{ marginTop: 20 }}>Demo App Only</Text> */}
           </View>
           <ShareGame />
-          <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            <Text>Copyright &copy; {year}. All rights reserved</Text>
+          <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', gap: widthScale(10), marginBottom: heightScale(10) }}>
+            <Text style={{ fontSize: moderateWs(10, 2) }}>Copyright &copy; {year}. All rights reserved</Text>
           </View>
         </View>
       </ScrollView>

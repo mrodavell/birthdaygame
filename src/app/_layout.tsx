@@ -5,7 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppDarkTheme, AppDefaultTheme } from '../constants/Theme';
 import { ThemeProvider } from "@react-navigation/native";
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState, } from 'react';
+import { useEffect, } from 'react';
 import { supabase } from '../lib/supabase';
 import { useWalletStore } from '../zustand/wallet';
 import { useResultsStore } from '../zustand/results';
@@ -38,9 +38,10 @@ export default function RootLayout() {
     const colorScheme = useColorScheme();
     const paperTheme = colorScheme === "dark" ? AppDarkTheme : AppDefaultTheme;
     const isWin = useGameStore(state => state.isWin);
+    const lockedInBoard = useGameStore(state => state.lockedInBoards);
     const { fetchWallet } = useWalletStore();
     const { setResults } = useResultsStore();
-    const { checkWin, setTickets, setIsWin } = useGameStore();
+    const { checkWin, setTickets, setIsWin, setIsOpenBet } = useGameStore();
     const { setUser } = useUserStore();
 
     const handleResult = (payload: any) => {
@@ -58,6 +59,15 @@ export default function RootLayout() {
         if (!error && data.session?.access_token) {
             setUser(data.session.user.phone)
             router.push("dashboard");
+        }
+    }
+
+    const getBettingStatus = async () => {
+        try {
+            const data = await AsyncStorage.getItem('is_open_betting');
+            setIsOpenBet(data === 'true' ? true : false);
+        } catch (e) {
+            console.log(e)
         }
     }
 
@@ -85,6 +95,7 @@ export default function RootLayout() {
         checkSession();
         fetchWallet();
         getTickets();
+        getBettingStatus();
         SplashScreen.hideAsync();
     }, [])
 
@@ -94,9 +105,10 @@ export default function RootLayout() {
                 <SafeAreaProvider>
                     <Stack
                         screenOptions={{
-                            headerShown: false
+                            headerShown: false,
+                            animation: 'none'
                         }}
-                        initialRouteName="index"
+                        initialRouteName="dashboard"
                     >
                         <Stack.Screen name='index' />
                         <Stack.Screen name='dashboard' />
@@ -109,6 +121,7 @@ export default function RootLayout() {
                         <Stack.Screen name='privacy' options={{ headerShown: true, title: "Privacy Policy" }} />
                         <Stack.Screen name='ticket' />
                         <Stack.Screen name='ticketdetails' />
+                        <Stack.Screen name='bet' />
                     </Stack>
                     <Toast autoHide={false} config={toastConfig} />
                     {isWin && <CongratsDialog visible={isWin} onDismiss={handleDismiss} />}

@@ -13,12 +13,14 @@ type TActivities = {
 
 type TLockedInBoard = {
   board: TBoard[];
+  drawTime: string[];
   timestamp: string;
 };
 
 type TResult = {
   id: number;
   result: string;
+  drawtime: string;
   create_at: string;
 };
 
@@ -26,6 +28,7 @@ type TState = {
   tickets: TTicket[];
   lockedInBoards: TLockedInBoard[];
   boards: TBoard[];
+  selectedDrawTime: string[];
   selectedBoardIndex?: number;
   bets: TBet[];
   draws: number;
@@ -34,6 +37,7 @@ type TState = {
   isWin: boolean;
   totalWin: number;
   winCombination: string;
+  isOpenBet: boolean;
 };
 
 type TActions = {
@@ -55,6 +59,8 @@ type TActions = {
   setActivities: (transactions: any) => void;
   setIsWin: (value: boolean) => void;
   setTotalWin: (value: number) => void;
+  setSelectedDrawTime: (time: string[]) => void;
+  setIsOpenBet: (value: boolean) => void;
 };
 
 const emptyBoard = [
@@ -122,6 +128,7 @@ const emptyBoard = [
 
 export const useGameStore = create<TState & TActions>((set, get) => ({
   isWin: false,
+  isOpenBet: false,
   totalWin: 0,
   winCombination: "",
   boards: [
@@ -193,6 +200,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
   draws: 1,
   totalBet: 0,
   transactions: [],
+  selectedDrawTime: [],
   setIsWin: (value: boolean) => {
     set(() => ({ isWin: value }));
   },
@@ -254,6 +262,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
     const boards = get().boards;
     const newLockedIn: TLockedInBoard = {
       board: boards,
+      drawTime: get().selectedDrawTime,
       timestamp: dayjs().format("MMM DD, YYYY h:m:s A"),
     };
 
@@ -365,6 +374,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
   },
   handleResetBoard: () => {
     set(() => ({ boards: [...emptyBoard] }));
+    set(() => ({ selectedDrawTime: [] }));
   },
   getTotal: () => {
     const currentBoard = get().boards;
@@ -417,11 +427,17 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
   setActivities: (transactions: any) => {
     set(() => ({ transactions: [...(transactions ?? [])] }));
   },
-  checkWin: (combination: TResult) => {
+  checkWin: (result: TResult) => {
     const lockedInBoards = get().lockedInBoards;
-    const extractedBoards = lockedInBoards.map((obj) => {
+
+    const filteredBoard = lockedInBoards.filter((obj) => {
+      return obj.drawTime.includes(result.drawtime);
+    });
+
+    const extractedBoards = filteredBoard.map((obj) => {
       return obj.board;
     });
+
     const combinationsWithBets = extractedBoards.map((obj, index) => {
       return obj.map((value) => {
         return {
@@ -436,7 +452,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
     });
 
     const exist = combinationsWithBets.map((obj) => {
-      const res = combination.result.split("-");
+      const res = result.result.split("-");
       const letter = res[res.length - 1];
       const combiDate = `${res[0]}-${res[1]}`;
       return obj.filter((obj) => {
@@ -462,9 +478,23 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
       set(() => ({ totalWin: totalWin }));
       set(() => ({ isWin: true }));
       set(() => ({ totalBet: 0 }));
-      set(() => ({ winCombination: combination.result }));
+      set(() => ({ winCombination: result.result }));
     }
 
-    set(() => ({ lockedInBoards: [] }));
+    const cleanedDrawTime = lockedInBoards.filter((obj) => {
+      if (obj.drawTime.includes(result.drawtime)) {
+        const indexOf = obj.drawTime.indexOf(result.drawtime);
+        obj.drawTime.splice(indexOf, 1);
+      }
+      return !obj.drawTime.includes(result.drawtime) && obj.drawTime.length > 0;
+    });
+
+    set(() => ({ lockedInBoards: [...cleanedDrawTime] }));
+  },
+  setSelectedDrawTime: (time: string[]) => {
+    set(() => ({ selectedDrawTime: time }));
+  },
+  setIsOpenBet: (value: boolean) => {
+    set(() => ({ isOpenBet: value }));
   },
 }));
