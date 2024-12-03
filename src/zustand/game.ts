@@ -469,6 +469,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
     set(() => ({ transactions: [...(transactions ?? [])] }));
   },
   checkWin: async (result: TResult) => {
+    console.log(result);
     const user = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from("tickets")
@@ -476,7 +477,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
       .eq("status", "active")
       .eq("drawTime", result.drawtime)
       .eq("userid", user.data.user?.id);
-
+    console.log(error, data);
     if (!error && data.length > 0) {
       const ticketIds = data.map((obj) => obj.id);
 

@@ -1,4 +1,4 @@
-import { View } from 'react-native'
+import { Alert, View } from 'react-native'
 import React, { FC, useEffect, useState } from 'react'
 import { Button, Modal, Portal, Text, useTheme } from 'react-native-paper';
 import { useGameStore } from '../../zustand/game';
@@ -25,10 +25,14 @@ const CongratsDialog: FC<TCongratsDialogProps> = ({
     const [sound, setSound] = useState<Audio.Sound | undefined>();
 
     async function playSound() {
-        const { sound } = await Audio.Sound.createAsync(require('../../../assets/hbd.mp3'));
-        setSound(sound);
-        setIsPlaying(true);
-        await sound.playAsync();
+        try {
+            const { sound } = await Audio.Sound.createAsync(require('../../../assets/hbd.mp3'));
+            setSound(sound);
+            setIsPlaying(true);
+            await sound.playAsync();
+        } catch (error: any) {
+            Alert.alert('Error', error.message);
+        }
     }
 
 
