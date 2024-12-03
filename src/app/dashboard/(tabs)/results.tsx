@@ -17,15 +17,17 @@ type TResult = {
 
 export default function results() {
 
-    const { bottom, top } = useSafeAreaInsets()
-    const [fetching, setFetching] = useState<boolean>(false);
+    const { top } = useSafeAreaInsets()
+    const [loading, setLoading] = useState<boolean>(false);
     const [results, setResults] = useState<TResult[]>([]);
     const dimensions = useWindowDimensions();
     const theme = useTheme();
 
+
+
     const getResult = async () => {
         try {
-            setFetching(true);
+            setLoading(true);
             const { data, error } = await supabase.from('drawresult').select().order('id', { ascending: false }).limit(10);
 
             if (error) {
@@ -37,9 +39,14 @@ export default function results() {
         } catch (e) {
 
         } finally {
-            setFetching(false);
+            setLoading(false);
         }
     }
+
+    supabase
+        .channel('drawresult')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'drawresult' }, getResult)
+        .subscribe()
 
     useEffect(() => {
         getResult();
@@ -54,7 +61,7 @@ export default function results() {
                 justifyContent: 'flex-start',
             }}
         >
-            {!fetching &&
+            {!loading &&
                 <View style={{
                     padding: widthScale(10),
                     height: heightScale(dimensions.height * 0.85),
@@ -65,7 +72,7 @@ export default function results() {
                     </View>}
                     {results.length !== 0 &&
                         <View style={{ height: heightScale(dimensions.height * 0.85) }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', marginTop: heightScale(60), marginLeft: widthScale(10) }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', marginTop: widthScale(60), marginLeft: widthScale(10) }}>
                                 <MaterialCommunityIcons name='clipboard-text-clock' size={widthScale(20)} style={{ marginRight: widthScale(8) }} />
                                 <View style={{ flexDirection: 'row' }}>
                                     <Text style={{ fontSize: moderateWs(20, 1) }}>
@@ -83,7 +90,7 @@ export default function results() {
                                 showsVerticalScrollIndicator={false}
                                 data={results}
                                 renderItem={({ item }) => {
-                                    return <View key={`results-${item.id}`} style={{ marginTop: heightScale(10), paddingHorizontal: widthScale(10) }}>
+                                    return <View key={`results-${item.id}`} style={{ marginTop: heightScale(10), paddingHorizontal: widthScale(3) }}>
                                         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                             <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                                                 <MaterialCommunityIcons name='calendar' size={widthScale(12)} style={{ marginRight: widthScale(2), marginBottom: heightScale(5) }} />
@@ -115,7 +122,7 @@ export default function results() {
                 </View>
             }
             {
-                fetching &&
+                loading &&
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <ActivityIndicator animating={true} color={theme.colors.primary} size={50} />
                     <Text style={{ marginTop: heightScale(10) }}>Loading Data...</Text>

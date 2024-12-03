@@ -182,9 +182,7 @@ const Calendar2: FC = () => {
     const handleClearBoard = () => {
         try {
             setProcessing(true);
-            setTimeout(() => {
-                clearBoard(data);
-            }, 500)
+            clearBoard(data);
         } catch (error: any) {
             console.log(error);
         } finally {
@@ -204,45 +202,45 @@ const Calendar2: FC = () => {
                 <Text variant='titleLarge'>Board {data.label}</Text>
                 <IconButton icon="close" onPress={() => router.back()} />
             </View>
-            <ScrollView style={{ height: 'auto', marginBottom: heightScale(60) }} showsVerticalScrollIndicator={true}>
+            <ScrollView style={{ height: 'auto', marginBottom: widthScale(60) }} showsVerticalScrollIndicator={true}>
                 {processing && <View style={{ flex: 1, height: heightScale(screenHeight - 200), alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size={widthScale(50)} /></View>}
                 {!processing &&
                     <Fragment>
                         <View style={{ display: 'flex', flex: 1, padding: widthScale(10) }}>
                             <View style={{ flex: 1 }}>
                                 <Text variant='titleMedium' style={{ marginLeft: widthScale(10) }}>Month</Text>
-                                <View style={{ minHeight: heightScale(120), alignItems: 'center' }}>
+                                <View style={{ minHeight: widthScale(120), alignItems: 'center' }}>
                                     <FlatList
                                         data={months}
                                         renderItem={(item) => <CircleButton month={selectedMonth} type='month' label={item.item} index={item.index} handleMonth={handleMonth} />}
                                         keyExtractor={(item) => item}
                                         numColumns={7}
                                         style={{ flex: 1 }}
-                                        contentContainerStyle={{ paddingVertical: heightScale(20) }}
+                                        contentContainerStyle={{ paddingVertical: widthScale(20) }}
                                         scrollEnabled={false}
                                     />
                                 </View>
                                 <Divider style={{ marginVertical: heightScale(10) }} />
                                 <Text variant='titleMedium' style={{ marginLeft: widthScale(10) }}>Date</Text>
-                                <View style={{ minHeight: heightScale(250), alignItems: 'center' }}>
+                                <View style={{ minHeight: widthScale(250), alignItems: 'center' }}>
                                     <FlatList
                                         data={days}
                                         renderItem={(item) => <CircleButton date={selectedDate} type='date' label={item.item.toString()} index={item.index} handleDay={handleDay} />}
                                         numColumns={7}
                                         style={{ flex: 1 }}
-                                        contentContainerStyle={{ paddingVertical: heightScale(20) }}
+                                        contentContainerStyle={{ paddingVertical: widthScale(20) }}
                                         scrollEnabled={false}
                                     />
                                 </View>
                                 <Divider style={{ marginVertical: heightScale(10) }} />
                                 <Text variant='titleMedium' style={{ marginLeft: widthScale(10) }}>Letter/s</Text>
-                                <View style={{ height: heightScale(150), alignItems: 'center' }}>
+                                <View style={{ height: widthScale(150), alignItems: 'center' }}>
                                     <FlatList
                                         data={["F", "M", "S", "D"]}
                                         renderItem={(item) => <CircleButton letters={selectedLetters} type='letters' label={item.item.toString()} index={item.index} handleLetter={handleLetter} />}
                                         numColumns={2}
                                         style={{ flex: 1 }}
-                                        contentContainerStyle={{ paddingVertical: 10 }}
+                                        contentContainerStyle={{ paddingVertical: widthScale(10) }}
                                         scrollEnabled={false}
                                     />
                                 </View>
@@ -265,9 +263,9 @@ const Calendar2: FC = () => {
                         </View>
                         <View style={{ display: 'flex', flexDirection: 'row', gap: 10, alignContent: 'center', justifyContent: 'center', marginBottom: heightScale(35), marginTop: 0 }}>
                             {data?.status === 'filled' &&
-                                <Button mode='contained' style={{ minWidth: widthScale(120) }} buttonColor={theme.colors.tertiary} onPress={handleClearBet}>Clear Bet</Button>
+                                <Button mode='contained' style={{ minWidth: widthScale(120) }} buttonColor={theme.colors.tertiary} onPress={handleClearBet}>CLEAR</Button>
                             }
-                            <Button mode='contained' style={{ minWidth: widthScale(120) }} buttonColor={theme.colors.primary} onPress={handleConfirmBet}>Add Bet</Button>
+                            <Button mode='contained' style={{ minWidth: widthScale(120) }} buttonColor={theme.colors.primary} onPress={handleConfirmBet}>CONFIRM</Button>
                         </View>
                     </Fragment>
                 }

@@ -1,6 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import dayjs from "dayjs";
 import { create } from "zustand";
+import { supabase } from "../lib/supabase";
+import { Alert } from "react-native";
 
 type TTransactions = {
   type: string;
@@ -27,39 +29,62 @@ export const useWalletStore = create<TState & TActions>((set, get) => ({
   wallet: "0.00",
   transactions: [],
   fetchWallet: async () => {
-    const amount = await AsyncStorage.getItem("wallet");
-    set(() => ({ wallet: amount }));
+    const user = await supabase.auth.getUser();
+    const amount = await supabase
+      .from("profiles")
+      .select("wallet")
+      .eq("id", user.data.user?.id)
+      .single();
+
+    set(() => ({ wallet: amount.data?.wallet }));
   },
   setWallet: async (amount: string) => {
     await AsyncStorage.setItem("wallet", amount);
   },
-  deposit: (amount: number, transaction = "Deposit") => {
+  deposit: async (amount: number, transaction = "Deposit") => {
     const myWallet = get().wallet ?? "0.00";
     const finalAmount = parseInt(myWallet) + amount;
 
-    set(() => ({ wallet: parseFloat(finalAmount.toString()).toFixed(2) }));
-    get().setWallet(parseFloat(finalAmount.toString()).toFixed(2));
+    const user = await supabase.auth.getUser();
 
-    const data: TTransactions = {
-      type: transaction,
-      date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-      amount: amount,
-    };
-    get().handleTransactions(data);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ wallet: finalAmount })
+      .eq("id", user.data.user?.id);
+
+    if (!error) {
+      set(() => ({ wallet: parseFloat(finalAmount.toString()).toFixed(2) }));
+      get().fetchWallet();
+
+      const transactionData: TTransactions = {
+        type: transaction,
+        date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+        amount: amount,
+      };
+      get().handleTransactions(transactionData);
+    }
   },
-  withdraw: (amount: number, transaction = "Withdraw") => {
+  withdraw: async (amount: number, transaction = "Withdraw") => {
     const myWallet = get().wallet ?? "0.00";
     const finalAmount = parseInt(myWallet) - amount;
 
-    set(() => ({ wallet: parseFloat(finalAmount.toString()).toFixed(2) }));
-    get().setWallet(parseFloat(finalAmount.toString()).toFixed(2));
+    const user = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from("profiles")
+      .update({ wallet: finalAmount })
+      .eq("id", user.data.user?.id);
 
-    const data: TTransactions = {
-      type: transaction,
-      date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-      amount: amount,
-    };
-    get().handleTransactions(data);
+    if (!error) {
+      set(() => ({ wallet: parseFloat(finalAmount.toString()).toFixed(2) }));
+      get().fetchWallet();
+
+      const transactionData: TTransactions = {
+        type: transaction,
+        date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+        amount: amount,
+      };
+      get().handleTransactions(transactionData);
+    }
   },
   betDeduction: (amount: number) => {
     const myWallet = get().wallet ?? "0.00";

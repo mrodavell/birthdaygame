@@ -1,9 +1,11 @@
-import dayjs, { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import { create } from "zustand";
 import { TBet, TBoard, TTicket } from "../types/game";
 import { useWalletStore } from "./wallet";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { prizeMoney } from "../constants/App";
+import { supabase } from "../lib/supabase";
+import { number } from "yup";
 
 type TActivities = {
   type: string;
@@ -31,7 +33,6 @@ type TState = {
   selectedDrawTime: string[];
   selectedBoardIndex?: number;
   bets: TBet[];
-  draws: number;
   totalBet: number;
   transactions: TActivities[];
   isWin: boolean;
@@ -48,19 +49,17 @@ type TActions = {
   clearBoard: (data?: TBoard) => void;
   handleResetBoard: () => void;
   getTotal: () => void;
-  updateDraws: (draws: number) => void;
   lockedIn: () => void;
   checkWin: (combination: TResult) => void;
   incrementBet: () => void;
   decrementBet: () => void;
-  handleTickets: (ticket: TTicket) => void;
-  setTickets: (tickets: any) => void;
   handleActivities: (data: TActivities) => void;
   setActivities: (transactions: any) => void;
   setIsWin: (value: boolean) => void;
   setTotalWin: (value: number) => void;
   setSelectedDrawTime: (time: string[]) => void;
   setIsOpenBet: (value: boolean) => void;
+  clearTickets: () => void;
 };
 
 const emptyBoard = [
@@ -197,7 +196,6 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
   selectedBoardIndex: undefined,
   lockedInBoards: [],
   bets: [],
-  draws: 1,
   totalBet: 0,
   transactions: [],
   selectedDrawTime: [],
@@ -258,18 +256,73 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
     get().handleActivities(transaction);
     get().getTotal();
   },
-  lockedIn: () => {
+  lockedIn: async () => {
+    const prevTickets = get().tickets;
     const boards = get().boards;
-    const newLockedIn: TLockedInBoard = {
-      board: boards,
-      drawTime: get().selectedDrawTime,
-      timestamp: dayjs().format("MMM DD, YYYY h:m:s A"),
-    };
+    const combinations = boards.map((value) => {
+      if (value.status === "empty") {
+        return null;
+      }
+      return {
+        bet: value.bet,
+        combinations: `${parseInt(value.combination.month)}-${
+          value.combination.date
+        }-${value.combination.letters.join(",")}`,
+      };
+    });
 
-    const lockedInBoard = get().lockedInBoards;
-    lockedInBoard.push(newLockedIn);
-    get().getTotal();
-    set(() => ({ lockedInBoards: [...lockedInBoard] }));
+    const filteredCombinations = combinations.filter((value) => {
+      return value !== null;
+    });
+
+    const drawtimes = get().selectedDrawTime;
+
+    const user = await supabase.auth.getUser();
+    drawtimes.map(async (drawtime) => {
+      const serial = `E${dayjs().format("YY")}-${dayjs().format(
+        "MM"
+      )}-${Math.floor(100000 + Math.random() * 900000)}-${dayjs().format(
+        "DD"
+      )}`;
+
+      const drawNumber = `${dayjs().format("YYYYMMDD")}-${Math.floor(
+        100000 + Math.random() * 900000
+      )}`;
+
+      const prepData: TTicket = {
+        userid: user.data.user?.id,
+        boards: JSON.stringify(boards),
+        serial: serial,
+        drawTime: drawtime,
+        drawNumber: drawNumber,
+        totalBet: get().totalBet,
+        combinations: JSON.stringify(filteredCombinations),
+        drawCount: drawtimes.length,
+      };
+
+      const { error } = await supabase.from("tickets").insert(prepData);
+
+      if (!error) {
+        prevTickets.push({
+          ...prepData,
+          dateTimePurchased: dayjs().format("YYYY-MM-DD HH:mm:ss A"),
+          drawDate: dayjs().format("YYYY-MM-DD"), // can be a custom range later
+        });
+        set(() => ({ tickets: [...prevTickets] }));
+
+        const lockedInBoard = get().lockedInBoards;
+
+        const newLockedIn: TLockedInBoard = {
+          board: boards,
+          drawTime: get().selectedDrawTime,
+          timestamp: dayjs().format("MMM DD, YYYY h:m:s A"),
+        };
+
+        lockedInBoard.push(newLockedIn);
+        get().getTotal();
+        set(() => ({ lockedInBoards: [...lockedInBoard] }));
+      }
+    });
   },
   clearBoard: async (board?: TBoard | undefined) => {
     if (board === undefined) {
@@ -310,6 +363,9 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
     set(() => ({ boards: [...currentBoards] }));
 
     get().getTotal();
+  },
+  clearTickets: () => {
+    set(() => ({ tickets: [] }));
   },
   handleBoards: (data: TBet) => {
     const targetIndex = get().selectedBoardIndex ?? 0;
@@ -378,7 +434,8 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
   },
   getTotal: () => {
     const currentBoard = get().boards;
-    const draws = get().draws;
+    const draws =
+      get().selectedDrawTime.length === 0 ? 1 : get().selectedDrawTime.length;
 
     const totalBet = currentBoard.reduce((total, next) => {
       let emptyBet = next.bet;
@@ -389,13 +446,6 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
     }, 0);
 
     set(() => ({ totalBet: totalBet * draws }));
-  },
-  updateDraws: (draws: number) => {
-    if (draws === 0) return;
-    if (draws > 6) return;
-
-    set(() => ({ draws: draws }));
-    get().getTotal();
   },
   bet: (betData: TBet) => {
     set((state) => ({ bets: [...state.bets, betData] }));
@@ -409,15 +459,6 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
 
     get().handleActivities(data);
   },
-  handleTickets: (ticket: TTicket) => {
-    const prevTickets = get().tickets;
-    prevTickets.push(ticket);
-    set(() => ({ tickets: [...prevTickets] }));
-    AsyncStorage.setItem("tickets", JSON.stringify(prevTickets));
-  },
-  setTickets: (tickets: any) => {
-    set(() => ({ tickets: [...(tickets ?? [])] }));
-  },
   handleActivities: (data: TActivities) => {
     const prevActivities = get().transactions;
     prevActivities.push(data);
@@ -427,69 +468,82 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
   setActivities: (transactions: any) => {
     set(() => ({ transactions: [...(transactions ?? [])] }));
   },
-  checkWin: (result: TResult) => {
-    const lockedInBoards = get().lockedInBoards;
+  checkWin: async (result: TResult) => {
+    const user = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from("tickets")
+      .select("*")
+      .eq("status", "active")
+      .eq("drawTime", result.drawtime)
+      .eq("userid", user.data.user?.id);
 
-    const filteredBoard = lockedInBoards.filter((obj) => {
-      return obj.drawTime.includes(result.drawtime);
-    });
+    if (!error && data.length > 0) {
+      const ticketIds = data.map((obj) => obj.id);
 
-    const extractedBoards = filteredBoard.map((obj) => {
-      return obj.board;
-    });
-
-    const combinationsWithBets = extractedBoards.map((obj, index) => {
-      return obj.map((value) => {
-        return {
-          bet: value.bet,
-          combinationDate: `${parseInt(value.combination.month)}-${parseInt(
-            value.combination.date ?? 0
-          )}`,
-          letters: value.combination.letters,
-          lettersCount: value.combination.letters.length,
-        };
+      const forComputationData = data.map((obj) => {
+        const combination = JSON.parse(obj.combinations);
+        return combination.map((value: any) => {
+          return {
+            combinations: value.combinations,
+            bet: value.bet,
+            drawCount: obj.drawCount,
+          };
+        });
       });
-    });
 
-    const exist = combinationsWithBets.map((obj) => {
-      const res = result.result.split("-");
-      const letter = res[res.length - 1];
-      const combiDate = `${res[0]}-${res[1]}`;
-      return obj.filter((obj) => {
-        if (obj.combinationDate === combiDate) {
-          if (obj.letters.includes(letter)) {
-            return true;
+      const totalWin = forComputationData.map((obj) => {
+        return obj.map((value: any) => {
+          const bet = value.bet;
+          const combinations = value.combinations;
+
+          // prepare result
+          const explodeResult = result.result.split("-");
+          const monthDate = explodeResult[0] + "-" + explodeResult[1];
+          const letter = explodeResult[explodeResult.length - 1];
+
+          // prepare ticket combinations
+          const explodedCombinations = combinations.split("-");
+          const monthDateCombination =
+            explodedCombinations[0] + "-" + explodedCombinations[1];
+          const letters = explodedCombinations[explodedCombinations.length - 1];
+          const explodedLetters = letters.split(",");
+
+          // check if the ticket won
+          if (monthDate === monthDateCombination) {
+            if (explodedLetters.includes(letter)) {
+              const computedWin = (bet * prizeMoney) / explodedLetters.length;
+              return computedWin;
+            }
           }
-        }
+
+          return 0;
+        });
       });
-    });
 
-    let totalWin = 0;
-    exist.map((value) => {
-      value.map((v) => {
-        if (v.bet !== "") {
-          totalWin += (parseInt(v.bet) * prizeMoney) / v.lettersCount;
-        }
+      const actualTotalWin = totalWin.map((obj) => {
+        return obj.reduce((total: number, next: number) => +total + +next, 0);
       });
-    });
 
-    if (totalWin > 0) {
-      useWalletStore.getState().deposit(totalWin, "Deposit Winnings");
-      set(() => ({ totalWin: totalWin }));
-      set(() => ({ isWin: true }));
-      set(() => ({ totalBet: 0 }));
-      set(() => ({ winCombination: result.result }));
-    }
+      const finalTotalWin = actualTotalWin.reduce(
+        (total, next) => +total + +next,
+        0
+      );
 
-    const cleanedDrawTime = lockedInBoards.filter((obj) => {
-      if (obj.drawTime.includes(result.drawtime)) {
-        const indexOf = obj.drawTime.indexOf(result.drawtime);
-        obj.drawTime.splice(indexOf, 1);
+      if (finalTotalWin > 0) {
+        useWalletStore.getState().deposit(finalTotalWin, "Deposit Winnings");
+        set(() => ({ totalWin: finalTotalWin }));
+        set(() => ({ isWin: true }));
+        set(() => ({ totalBet: 0 }));
+        set(() => ({ winCombination: result.result }));
+
+        await supabase
+          .from("tickets")
+          .update({ status: "inactive" })
+          .in("id", ticketIds);
       }
-      return !obj.drawTime.includes(result.drawtime) && obj.drawTime.length > 0;
-    });
 
-    set(() => ({ lockedInBoards: [...cleanedDrawTime] }));
+      set(() => ({ lockedInBoards: [] }));
+    }
   },
   setSelectedDrawTime: (time: string[]) => {
     set(() => ({ selectedDrawTime: time }));

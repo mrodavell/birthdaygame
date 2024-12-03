@@ -47,19 +47,31 @@ export default function register() {
                 const { error } = await supabase.auth.signUp({
                     phone: mobile,
                     password: values.password,
+                    options: {
+                        data: {
+                            display_name: values.fullname
+                        }
+                    }
                 })
 
                 if (!error) {
+                    Alert.alert("Success", "Use your registered credentials to login", [
+                        { text: 'OK' }
+                    ])
                     router.push({
                         pathname: "login",
                         params: {
                             phone: mobile
                         }
                     });
+                } else {
+                    throw error;
                 }
 
-            } catch (e) {
-                console.log(e)
+            } catch (e: any) {
+                Alert.alert("Error occurred on registration", e.message, [
+                    { text: 'OK' }
+                ]);
             } finally {
                 setLoading(false);
             }

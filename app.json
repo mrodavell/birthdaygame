@@ -10,7 +10,12 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ffffff",
+      "dark": {
+        "image": "./assets/splash.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#000000"
+      }
     },
     "ios": {
       "supportsTablet": true
@@ -20,7 +25,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.mrodavell.birthdaygame"
+      "package": "com.birthdaygame.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"

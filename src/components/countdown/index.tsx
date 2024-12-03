@@ -1,5 +1,5 @@
 import { View, Text } from 'react-native'
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, Fragment, useEffect, useState } from 'react'
 import { useTheme } from 'react-native-paper';
 import dayjs, { Dayjs } from 'dayjs';
 import { heightScale, moderateWs, widthScale } from '../../helpers/scaler';
@@ -39,8 +39,6 @@ const CountDown: FC = () => {
             timeDiffInSeconds = fivePm.diff(currentTime, 'second');
         } else if (currentTime.isBefore(ninePm)) {
             timeDiffInSeconds = ninePm.diff(currentTime, 'second');
-        } else {
-            timeDiffInSeconds = currentTime.diff(tenAm, 'second');
         }
 
         return timeDiffInSeconds;
@@ -54,13 +52,8 @@ const CountDown: FC = () => {
 
             // Stop the countdown when the target time is reached
             if (timeDiffInSeconds <= 0) {
-                if (isOpenBet) {
-                    const timeDiffInSeconds = getTimeDiffInSeconds();
-                    setTime(() => formatTime(timeDiffInSeconds));
-                } else {
-                    clearInterval(interval);
-                    setTime("Betting has closed");
-                }
+                clearInterval(interval);
+                setTime("CLOSED");
             } else {
                 // Update the countdown every second 
                 setTime(() => formatTime(timeDiffInSeconds));
@@ -74,30 +67,51 @@ const CountDown: FC = () => {
     }, [time])
 
     return (
-        <View
-            style={{
-                backgroundColor: theme.colors.secondaryContainer,
-                borderColor: 'black',
-                borderWidth: 1,
-                flex: 1,
-                flexDirection: 'row',
-                justifyContent: 'center',
-                marginLeft: widthScale(10),
-                padding: heightScale(5),
-                borderRadius: 8,
-            }}
-        >
-            <View style={{ alignItems: 'center', justifyContent: 'center', }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', }}>
-                    <MaterialCommunityIcons name='clock-outline' size={widthScale(20)} style={{ marginRight: widthScale(10) }} />
-                    <Text style={{ color: 'black', fontWeight: 'bold', fontSize: moderateWs(14, 1) }}>
-                        <Text>Betting closes in: </Text>
-                    </Text>
-                    <Text>{time}</Text>
+        <Fragment>
+            {!isOpenBet &&
+                <View style={{
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderWidth: 1,
+                    borderColor: 'transparent',
+                    height: heightScale(40),
+                }}>
+                    <Text style={{ color: 'red', fontSize: moderateWs(14, 1) }}>Betting is closed</Text>
                 </View>
+            }
+            {isOpenBet &&
+                <View
+                    style={{
+                        backgroundColor: theme.colors.secondaryContainer,
+                        borderColor: 'black',
+                        borderWidth: 1,
+                        flex: 1,
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        marginLeft: widthScale(10),
+                        padding: heightScale(5),
+                        borderRadius: 8,
+                    }}
+                >
+                    <View style={{ alignItems: 'center', justifyContent: 'center', }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', }}>
+                            {time !== "CLOSED" &&
+                                <MaterialCommunityIcons name='clock-outline' size={widthScale(20)} style={{ marginRight: widthScale(10) }} />
+                            }
+                            <Text style={{ color: 'black', fontWeight: 'bold', fontSize: moderateWs(14, 1) }}>
+                                {time === "CLOSED" && <Text style={{ color: 'red' }}>Betting is closed</Text>}
+                                {time !== "CLOSED" && <Text>Betting closes in: </Text>}
+                            </Text>
+                            {time !== "CLOSED" &&
+                                <Text>{time}</Text>
+                            }
+                        </View>
 
-            </View>
-        </View>
+                    </View>
+                </View>
+            }
+        </Fragment>
     )
 }
 

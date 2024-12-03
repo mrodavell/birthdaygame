@@ -45,7 +45,8 @@
     "react-native-view-shot": "4.0.2",
     "react-native-web": "~0.19.13",
     "yup": "^1.4.0",
-    "zustand": "^4.5.4"
+    "zustand": "^4.5.4",
+    "@react-native-community/netinfo": "11.4.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

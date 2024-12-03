@@ -1,6 +1,6 @@
 import { router, Stack } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
-import { AppState, useColorScheme } from 'react-native';
+import { Alert, AppState, useColorScheme } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppDarkTheme, AppDefaultTheme } from '../constants/Theme';
 import { ThemeProvider } from "@react-navigation/native";
@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '../config/toast-config';
 import CongratsDialog from '../components/congratsdialog';
+import NetInfo from '@react-native-community/netinfo';
 
 // Tells Supabase Auth to continuously refresh the session automatically
 // if the app is in the foreground. When this is added, you will continue
@@ -38,10 +39,9 @@ export default function RootLayout() {
     const colorScheme = useColorScheme();
     const paperTheme = colorScheme === "dark" ? AppDarkTheme : AppDefaultTheme;
     const isWin = useGameStore(state => state.isWin);
-    const lockedInBoard = useGameStore(state => state.lockedInBoards);
     const { fetchWallet } = useWalletStore();
     const { setResults } = useResultsStore();
-    const { checkWin, setTickets, setIsWin, setIsOpenBet } = useGameStore();
+    const { checkWin, setIsWin, setIsOpenBet } = useGameStore();
     const { setUser } = useUserStore();
 
     const handleResult = (payload: any) => {
@@ -64,27 +64,11 @@ export default function RootLayout() {
 
     const getBettingStatus = async () => {
         try {
-            const data = await AsyncStorage.getItem('is_open_betting');
-            setIsOpenBet(data === 'true' ? true : false);
+            const { data } = await supabase.from('setup').select('is_open_betting').single();
+            setIsOpenBet(data?.is_open_betting ?? false);
         } catch (e) {
             console.log(e)
         }
-    }
-
-    const getTickets = async () => {
-        await AsyncStorage.removeItem('tickets');
-        const tickets = await AsyncStorage.getItem('tickets') ?? "";
-        if (tickets === "") {
-            setTickets([]);
-            return;
-        }
-
-        if (!tickets) {
-            setTickets([]);
-            return;
-        }
-
-        setTickets(JSON.parse(tickets ?? ""));
     }
 
     const handleDismiss = () => {
@@ -92,11 +76,21 @@ export default function RootLayout() {
     }
 
     useEffect(() => {
-        checkSession();
-        fetchWallet();
-        getTickets();
-        getBettingStatus();
+        const unsubscribe = NetInfo.addEventListener(state => {
+            if (state.isConnected && state.isInternetReachable) {
+                checkSession();
+                getBettingStatus();
+                fetchWallet();
+            } else {
+                Alert.alert('No Internet Connection', 'Please check your internet connection and try again.', [{ text: 'OK' }]);
+            }
+        });
+
         SplashScreen.hideAsync();
+
+        return () => {
+            unsubscribe();
+        }
     }, [])
 
     return (

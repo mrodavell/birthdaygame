@@ -39,10 +39,8 @@ export default function Home() {
     const totalBet = useGameStore((state) => state.totalBet);
     const selectedDrawTime = useGameStore((state) => state.selectedDrawTime);
     const isOpenBet = useGameStore((state) => state.isOpenBet);
-    const draws = useGameStore((state) => state.draws);
-    const lockedInBoard = useGameStore((state) => state.lockedInBoards);
-    const { deposit, withdraw } = useWalletStore();
-    const { updateDraws, lockedIn, handleResetBoard, setIsOpenBet } = useGameStore();
+    const { deposit, withdraw, fetchWallet } = useWalletStore();
+    const { lockedIn, handleResetBoard, setIsOpenBet } = useGameStore();
 
     const handleOpenBet = async (payload: any) => {
         await AsyncStorage.setItem('is_open_betting', payload.new.is_open_betting?.toString() ?? "false");
@@ -139,26 +137,29 @@ export default function Home() {
         }
     }
 
-    const handleComplete = () => {
-        const amount = action === "withdraw" ? withdrawAmount : depositAmount;
+    const handleComplete = async () => {
+        try {
 
-        if (amount === "") {
-            let msg = action === "withdraw" ? "withdrawal" : "deposit";
-            handleAlerts(`Please specify the amount of ${msg}`);
-            return;
-        }
+            toggleIndicator()
 
-        if (method === "") {
-            let msg = action === "withdraw" ? "withdrawal" : "deposit";
-            handleAlerts(`Please choose mode of ${msg}`)
-            return;
-        }
+            const amount = action === "withdraw" ? withdrawAmount : depositAmount;
 
-        toggleIndicator()
+            if (amount === "") {
+                let msg = action === "withdraw" ? "withdrawal" : "deposit";
+                handleAlerts(`Please specify the amount of ${msg}`);
+                return;
+            }
 
-        setTimeout(() => {
+            if (method === "") {
+                let msg = action === "withdraw" ? "withdrawal" : "deposit";
+                handleAlerts(`Please choose mode of ${msg}`)
+                return;
+            }
+
             if (action === "deposit") {
                 deposit(parseInt(amount), "Deposit");
+                setDepositAmount("0");
+                Alert.alert("Deposit Successful", `You have successfully deposited P${amount}`, [{ text: 'OK' }]);
             }
 
             if (action === "withdraw") {
@@ -167,11 +168,17 @@ export default function Home() {
                     handleAlerts("Insufficient Wallet Amount")
                 }
                 withdraw(parseInt(amount), "Withdraw");
+                setWithdrawAmount("0");
+                Alert.alert("Withdrawal Successful", `You have successfully withdrawn P${amount}`, [{ text: 'OK' }]);
             }
 
-            toggleIndicator();
             paymentApiRef.current?.close();
-        }, 2000)
+
+        } catch (error: any) {
+            Alert.alert(`Error on ${action === 'withdraw' ? 'withdraw' : 'deposit'} transaction`, error.message, [{ text: 'OK' }]);
+        } finally {
+            toggleIndicator();
+        }
     }
 
     const handLockInBet = () => {
@@ -212,6 +219,20 @@ export default function Home() {
         ])
     }
 
+    const handleFocus = () => {
+        if (withdrawAmount === "0" && action === "withdraw") {
+            setWithdrawAmount(""); // Clear the value if it is "0"
+        }
+
+        if (depositAmount === "0" && action === "deposit") {
+            setDepositAmount(""); // Clear the value if it is "0"
+        }
+    };
+
+    const handleRefreshWallet = async () => {
+        fetchWallet();
+    }
+
     return (
         <SafeAreaView style={{ flex: 1, flexGrow: 1, flexDirection: 'column', paddingHorizontal: widthScale(10), marginBottom: bottom, justifyContent: 'flex-start' }}>
             {isOpenBet &&
@@ -245,7 +266,7 @@ export default function Home() {
                         <Text style={{ fontSize: moderateWs(20, 1), fontWeight: 'bold' }}>P {parseFloat(wallet.toString()).toFixed(2)}</Text>
                     </View>
                     <View style={{ flex: 2, justifyContent: 'center' }}>
-                        <IconButton size={widthScale(30)} icon="refresh" onPress={() => null} iconColor={theme.colors.primary} />
+                        <IconButton size={widthScale(30)} icon="refresh" onPress={() => handleRefreshWallet()} iconColor={theme.colors.primary} />
                     </View>
                 </View>
             </Card>
@@ -266,16 +287,7 @@ export default function Home() {
                     <MaterialCommunityIcons name='calendar' size={widthScale(15)} color={theme.colors.tertiary} />
                     <Text style={{ fontSize: moderateWs(14, 1), fontWeight: 'bold', color: 'black', marginLeft: widthScale(5) }}>Draw Date: {dayjs().format('MM/DD/YYYY')} </Text>
                 </View>
-                {/* <View style={{ flexDirection: 'row', flex: 1, alignItems: 'center', justifyContent: 'center', marginVertical: heightScale(5) }}>
-                    <Text style={{ fontSize: moderateWs(14, 1), }} >No of. Draws:</Text>
-                    <IconButton mode='contained' icon="minus" style={{ borderWidth: 1 }} iconColor='black' containerColor={theme.colors.surface} size={widthScale(18)} onPress={() => updateDraws((draws - 1))} />
-                    <View style={{ marginTop: 0 }}>
-                        <View style={{ borderWidth: 1, width: widthScale(30), height: heightScale(25), justifyContent: 'center', alignItems: 'center' }}>
-                            <Text>{draws}</Text>
-                        </View>
-                    </View>
-                    <IconButton mode='contained' icon="plus" style={{ borderWidth: 1 }} iconColor='black' containerColor={theme.colors.surface} size={widthScale(18)} onPress={() => updateDraws((draws + 1))} />
-                </View> */}
+                <Text>Please pick 1 or multiple active draw time</Text>
                 <DrawTime isOpenBet={isOpenBet} />
             </View>
             <View style={{ flexDirection: 'row' }}>
@@ -321,8 +333,9 @@ export default function Home() {
                     <View style={{ marginHorizontal: widthScale(20) }}>
                         <AmountPicker amount={depositAmount} handlePick={handleDepositAmountSelect} />
                         <TextInput
-                            value={depositAmount?.toString()}
-                            onChangeText={(text: string) => handleDepositAmountSelect(text)}
+                            value={depositAmount}
+                            onChangeText={(text) => handleDepositAmountSelect(text)}
+                            onFocus={handleFocus}
                             keyboardType='numeric'
                             mode='outlined'
                             placeholder='Enter Amount'
@@ -344,8 +357,9 @@ export default function Home() {
                     <View style={{ marginHorizontal: widthScale(20) }}>
                         <AmountPicker amount={withdrawAmount} handlePick={handleWithdrawAmountSelect} />
                         <TextInput
-                            value={withdrawAmount?.toString()}
+                            value={withdrawAmount}
                             onChangeText={(text: string) => handleWithdrawAmountSelect(text)}
+                            onFocus={handleFocus}
                             keyboardType='numeric'
                             mode='outlined'
                             placeholder='Enter Amount'

@@ -25,7 +25,7 @@ type ButtonGroupProps = {
 const ButtonGroup: FC<ButtonGroupProps> = ({ time, indicators, selected, isDisabled = true, isOpenBet = false }) => {
 
     const selectedDrawTime = useGameStore((state) => state.selectedDrawTime);
-    const { setSelectedDrawTime } = useGameStore();
+    const { setSelectedDrawTime, getTotal } = useGameStore();
 
     const handleSelected = (time: string) => {
         if (!isOpenBet) {
@@ -46,6 +46,8 @@ const ButtonGroup: FC<ButtonGroupProps> = ({ time, indicators, selected, isDisab
         } else {
             setSelectedDrawTime([...prevState, time])
         }
+
+        getTotal();
     }
 
     return <TouchableOpacity onPress={() => handleSelected(time)} style={{ justifyContent: 'center', alignItems: 'center' }}>

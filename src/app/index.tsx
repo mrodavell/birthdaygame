@@ -63,15 +63,15 @@ export default function Main() {
               REGISTER
             </Button>
           </View>
-          <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', gap: 10, marginTop: 20 }}>
+          <View style={{ flex: 1, flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', gap: widthScale(10), marginTop: widthScale(20) }}>
             <Text>Accredited By</Text>
             <Image
               source={require("../../assets/pagcor.png")}
               style={{
                 alignSelf: 'center',
-                height: heightScale(70),
-                width: widthScale(70),
-                marginTop: heightScale(10),
+                height: heightScale(55),
+                width: widthScale(50),
+                marginTop: heightScale(5),
               }}
             />
             {/* <Text variant="titleLarge" style={{ marginTop: 20 }}>Demo App Only</Text> */}

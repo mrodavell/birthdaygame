@@ -55,10 +55,10 @@ const Board: FC<TBoardProps> = ({
                         elevation={2}
                         style={{
                             backgroundColor: theme.colors.surface,
-                            height: heightScale(42),
+                            height: widthScale(42),
                             padding: widthScale(8),
                             borderRadius: widthScale(5),
-                            margin: heightScale(2),
+                            margin: widthScale(2),
                             justifyContent: 'space-around',
                             flex: 1,
                         }}

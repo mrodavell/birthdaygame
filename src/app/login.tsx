@@ -45,7 +45,7 @@ export default function login() {
 
                 if (!error) {
                     setUser(mobile);
-                    router.push('dashboard');
+                    router.replace('dashboard');
                 }
 
                 if (error) {
@@ -131,7 +131,7 @@ export default function login() {
                                 disabled={loading}
                             >
                                 {!loading && <Text style={{ color: 'white', fontSize: moderateWs(12, 1) }}>LOGIN</Text>}
-                                {loading && <ActivityIndicator animating={true} color='white' />}
+                                {loading && <ActivityIndicator animating={true} color='white' size={moderateWs(12, 1)} />}
                             </Button>
                         </View>
                         <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
@@ -143,6 +143,7 @@ export default function login() {
                                     textColor='white'
                                     mode='elevated'
                                     onPress={() => router.push("recover")}
+                                    disabled={loading}
                                 >
                                     RECOVER ACCOUNT
                                 </Button>

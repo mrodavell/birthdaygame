@@ -18,12 +18,15 @@ export type TBet = {
 };
 
 export type TTicket = {
-  datePurchased: string;
+  userid?: string;
+  dateTimePurchased?: string;
+  drawDate?: string;
   drawNumber: string;
-  drawDate: string;
   serial: string;
-  boards: TBoard[] | string;
-  totalBet: string;
-  draws: string;
-  drawTimes: string[];
+  boards: string;
+  totalBet: string | number;
+  drawTime: string;
+  drawCount?: number;
+  combinations: string;
+  created_at?: string;
 };

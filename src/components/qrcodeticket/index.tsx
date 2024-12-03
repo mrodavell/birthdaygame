@@ -1,6 +1,5 @@
 import QRCode from 'react-native-qrcode-svg';
 import { widthScale } from '../../helpers/scaler';
-import dayjs from 'dayjs';
 
 type TQRCodeProps = {
     serial: string,
