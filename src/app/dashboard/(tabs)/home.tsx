@@ -18,6 +18,7 @@ import { heightScale, moderateWs, widthScale } from '../../../helpers/scaler';
 import DrawTime from '../../../components/drawtime';
 import { supabase } from '../../../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDebounce } from 'use-debounce';
 
 export default function Home() {
 
@@ -26,11 +27,13 @@ export default function Home() {
     const screenWidth = dimensions.width;
     const { bottom } = useSafeAreaInsets();
     const [withdrawAmount, setWithdrawAmount] = useState<string>("0");
+    const [withdrawValue] = useDebounce(withdrawAmount, 500);
     const [depositAmount, setDepositAmount] = useState<string>("0");
+    const [depositValue] = useDebounce(depositAmount, 500);
     const [method, setMethod] = useState<string>("");
     const [action, setAction] = useState<string | null>(null);
-    const [transacting, setTransacting] = useState<boolean>(false);
-    const toggleIndicator = () => setTransacting(prev => !prev)
+    const [loading, setLoading] = useState<boolean>(false);
+    const toggleIndicator = () => setLoading(prev => !prev)
     const depositRef = useRef<BottomSheetModal>(null);
     const withdrawRef = useRef<BottomSheetModal>(null);
     const paymentApiRef = useRef<BottomSheetModal>(null);
@@ -333,7 +336,7 @@ export default function Home() {
                     <View style={{ marginHorizontal: widthScale(20) }}>
                         <AmountPicker amount={depositAmount} handlePick={handleDepositAmountSelect} />
                         <TextInput
-                            value={depositAmount}
+                            value={depositValue}
                             onChangeText={(text) => handleDepositAmountSelect(text)}
                             onFocus={handleFocus}
                             keyboardType='numeric'
@@ -357,7 +360,7 @@ export default function Home() {
                     <View style={{ marginHorizontal: widthScale(20) }}>
                         <AmountPicker amount={withdrawAmount} handlePick={handleWithdrawAmountSelect} />
                         <TextInput
-                            value={withdrawAmount}
+                            value={withdrawValue}
                             onChangeText={(text: string) => handleWithdrawAmountSelect(text)}
                             onFocus={handleFocus}
                             keyboardType='numeric'
@@ -391,8 +394,8 @@ export default function Home() {
                     </View>
                 </View>
             </AppBottomSheet>
-            {transacting &&
-                <Indicator visible={transacting} onDismiss={toggleIndicator}>
+            {loading &&
+                <Indicator visible={loading} onDismiss={toggleIndicator}>
                     <ActivityIndicator size={widthScale(50)} />
                 </Indicator>
             }

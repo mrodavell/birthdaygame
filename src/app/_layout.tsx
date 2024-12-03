@@ -102,7 +102,7 @@ export default function RootLayout() {
                             headerShown: false,
                             animation: 'none'
                         }}
-                        initialRouteName="dashboard"
+                        initialRouteName="index"
                     >
                         <Stack.Screen name='index' />
                         <Stack.Screen name='dashboard' />

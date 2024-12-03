@@ -41,8 +41,6 @@ export default function login() {
                     password: password,
                 })
 
-                console.log(error)
-
                 if (!error) {
                     setUser(mobile);
                     router.replace('dashboard');
