@@ -31,13 +31,17 @@ export const useWalletStore = create<TState & TActions>((set, get) => ({
   transactions: [],
   fetchWallet: async () => {
     const user = await supabase.auth.getUser();
-    const amount = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("wallet")
       .eq("id", user.data.user?.id)
       .single();
 
-    set(() => ({ wallet: amount.data?.wallet }));
+    if (error) {
+      throw error;
+    }
+
+    set(() => ({ wallet: data?.wallet }));
   },
   updateWallet: async (amount: string) => {
     const user = await supabase.auth.getUser();

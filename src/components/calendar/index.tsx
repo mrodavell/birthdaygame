@@ -199,7 +199,7 @@ const Calendar: FC<TCalendarProps> = ({
                 handleDismiss();
             }, 500)
         } catch (error: any) {
-            console.log(error);
+            Alert.alert("Error", error.message, [{ text: 'OK' }]);
         } finally {
             setProcessing(false);
         }

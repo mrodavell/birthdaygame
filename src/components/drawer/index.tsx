@@ -1,4 +1,4 @@
-import { View, Image } from 'react-native'
+import { View, Image, Alert } from 'react-native'
 import { ActivityIndicator, Text } from 'react-native-paper'
 import { DrawerContentScrollView, DrawerItem, DrawerItemList } from '@react-navigation/drawer'
 import { router } from 'expo-router'
@@ -20,11 +20,16 @@ export default function DrawerContent(props: any) {
 
         try {
             setLogout(true);
-            await supabase.auth.signOut();
-            router.push("login");
+            const { error } = await supabase.auth.signOut();
 
-        } catch (e) {
-            console.log(e)
+            if (error) {
+                throw error;
+            }
+
+            router.replace("login");
+
+        } catch (error: any) {
+            Alert.alert("Error", error.message, [{ text: 'OK' }]);
         } finally {
             setLogout(false);
         }

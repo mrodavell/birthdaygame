@@ -30,6 +30,7 @@ export default function Home() {
     const [method, setMethod] = useState<string>("");
     const [action, setAction] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
+    const [fetching, setFetching] = useState<boolean>(false);
     const toggleIndicator = () => setLoading(prev => !prev)
     const depositRef = useRef<BottomSheetModal>(null);
     const withdrawRef = useRef<BottomSheetModal>(null);
@@ -214,7 +215,7 @@ export default function Home() {
         handleConfirmPrompt("This will lock in your bet for the upcoming draw");
     }
 
-    const handleLockedIn = () => {
+    const handleLockedIn = async () => {
         lockedIn(totalBet);
         handleResetBoard();
         router.push('ticket');
@@ -244,7 +245,14 @@ export default function Home() {
     };
 
     const handleRefreshWallet = async () => {
-        fetchWallet();
+        try {
+            setFetching(true);
+            fetchWallet();
+        } catch (error: any) {
+            Alert.alert('Error', error.message, [{ text: 'OK' }])
+        } finally {
+            setFetching(false);
+        }
     }
 
     useEffect(() => {
@@ -309,7 +317,12 @@ export default function Home() {
                         <Text style={{ fontSize: moderateWs(20, 1), fontWeight: 'bold' }}>P {parseFloat(wallet.toString()).toFixed(2)}</Text>
                     </View>
                     <View style={{ flex: 2, justifyContent: 'center' }}>
-                        <IconButton size={widthScale(30)} icon="refresh" onPress={() => handleRefreshWallet()} iconColor={theme.colors.primary} />
+                        {fetching &&
+                            <ActivityIndicator animating={true} size={widthScale(25)} color={theme.colors.primary} />
+                        }
+                        {!fetching &&
+                            <IconButton size={widthScale(30)} icon="refresh" onPress={() => handleRefreshWallet()} iconColor={theme.colors.primary} />
+                        }
                     </View>
                 </View>
             </Card>

@@ -171,7 +171,7 @@ const Calendar2: FC = () => {
             setProcessing(true);
             clearBoard(data);
         } catch (error: any) {
-            console.log(error);
+            Alert.alert("Error", error.message, [{ text: 'OK' }]);
         } finally {
             setProcessing(false);
         }
