@@ -46,6 +46,12 @@ export default function calculator() {
         setResult(result.toString());
     }
 
+    const handleFocus = () => {
+        if (bet === "0") {
+            setBet("");
+        }
+    }
+
 
     useEffect(() => {
         if (bet !== "" && letters.length > 0) {
@@ -54,6 +60,13 @@ export default function calculator() {
             setResult("0");
         }
     }, [letters, bet])
+
+    useEffect(() => {
+        return () => {
+            setBet("0");
+            setResult("0");
+        }
+    }, [])
 
     return (
         <SafeAreaView style={{ flex: 1, flexGrow: 1, flexDirection: 'column', paddingHorizontal: heightScale(10), marginTop: heightScale(10), marginBottom: heightScale(bottom), justifyContent: 'flex-start' }}>
@@ -75,9 +88,10 @@ export default function calculator() {
                         <TextInput
                             value={bet.toString()}
                             onChangeText={handleBet}
+                            onFocus={handleFocus}
                             keyboardType='numeric'
                             mode='outlined'
-                            placeholder='BET'
+                            placeholder='ENTER BET'
                             style={{
                                 textAlign: 'center',
                                 width: '100%',

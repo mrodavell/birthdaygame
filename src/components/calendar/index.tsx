@@ -144,14 +144,8 @@ const Calendar: FC<TCalendarProps> = ({
 
         try {
             setProcessing(true);
-            if (wallet === null) {
-                Alert.alert("Wallet Warning", "Insufficient wallet funds");
-                return;
-            }
-
-            if (parseInt(bet) > parseInt(wallet)) {
-                Alert.alert("Wallet Warning", "Insufficient wallet funds");
-                return;
+            if (wallet === null || parseInt(bet) > parseInt(wallet)) {
+                throw new Error("Insufficient wallet funds");
             }
 
             const newdata: TBet = {
@@ -169,7 +163,7 @@ const Calendar: FC<TCalendarProps> = ({
                 handleDismiss();
             }, 500)
         } catch (error: any) {
-            console.log(error);
+            Alert.alert("Wallet Error", error.message, [{ text: 'OK' }]);
         } finally {
             setProcessing(false);
         }

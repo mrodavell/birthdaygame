@@ -47,13 +47,11 @@ export default function login() {
                 }
 
                 if (error) {
-                    Alert.alert("Error", "Invalid Credentials", [
-                        { text: 'OK' }
-                    ])
+                    throw error;
                 }
 
-            } catch (e) {
-
+            } catch (error: any) {
+                Alert.alert('Error', error.message, [{ text: 'OK' }]);
             } finally {
                 setLoading(false);
             }

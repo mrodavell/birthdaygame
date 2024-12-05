@@ -15,22 +15,23 @@ export default function changepassword() {
 
     const handleChangePassword = async () => {
 
-        if (password === "") {
-            Alert.alert("Error", "Password is required");
-            return;
-        }
+        try {
+            if (password === "") {
+                throw new Error("Password is required");
+            }
 
-        if (confirmPassword === "") {
-            Alert.alert("Error", "Confirm Password is required");
-            return;
-        }
+            if (confirmPassword === "") {
+                throw new Error("Confirm Password is required");
+            }
 
-        if (password !== confirmPassword) {
-            Alert.alert("Error", "Passwords do not match");
-            return;
-        }
+            if (password !== confirmPassword) {
+                throw new Error("Passwords do not match");
+            }
 
-        router.push("login");
+            router.push("login");
+        } catch (error: any) {
+            Alert.alert('Error', error.message, [{ text: 'OK' }]);
+        }
     }
 
     return (

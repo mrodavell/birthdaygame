@@ -33,7 +33,6 @@ const Board: FC<TBoardProps> = ({
 
         setSelectedBoardIndex(index);
         router.push('bet');
-        // setModal(true)
     }
 
     const handleIncrementBet = (index: number) => {

@@ -17,6 +17,7 @@ type TState = {
 
 type TActions = {
   fetchWallet: () => void;
+  updateWallet: (amount: string) => void;
   setWallet: (amount: string) => void;
   betDeduction: (amount: number) => void;
   deposit: (amount: number, transaction: string) => void;
@@ -38,53 +39,43 @@ export const useWalletStore = create<TState & TActions>((set, get) => ({
 
     set(() => ({ wallet: amount.data?.wallet }));
   },
+  updateWallet: async (amount: string) => {
+    const user = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from("profiles")
+      .update({ wallet: amount })
+      .eq("id", user.data.user?.id);
+
+    if (!error) {
+      get().fetchWallet();
+    }
+  },
   setWallet: async (amount: string) => {
     await AsyncStorage.setItem("wallet", amount);
   },
   deposit: async (amount: number, transaction = "Deposit") => {
+    get().fetchWallet();
     const myWallet = get().wallet ?? "0.00";
     const finalAmount = parseInt(myWallet) + amount;
-
-    const user = await supabase.auth.getUser();
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({ wallet: finalAmount })
-      .eq("id", user.data.user?.id);
-
-    if (!error) {
-      set(() => ({ wallet: parseFloat(finalAmount.toString()).toFixed(2) }));
-      get().fetchWallet();
-
-      const transactionData: TTransactions = {
-        type: transaction,
-        date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-        amount: amount,
-      };
-      get().handleTransactions(transactionData);
-    }
+    get().updateWallet(parseFloat(finalAmount.toString()).toFixed(2));
+    const data: TTransactions = {
+      type: transaction,
+      date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+      amount: amount,
+    };
+    get().handleTransactions(data);
   },
   withdraw: async (amount: number, transaction = "Withdraw") => {
+    get().fetchWallet();
     const myWallet = get().wallet ?? "0.00";
     const finalAmount = parseInt(myWallet) - amount;
-
-    const user = await supabase.auth.getUser();
-    const { error } = await supabase
-      .from("profiles")
-      .update({ wallet: finalAmount })
-      .eq("id", user.data.user?.id);
-
-    if (!error) {
-      set(() => ({ wallet: parseFloat(finalAmount.toString()).toFixed(2) }));
-      get().fetchWallet();
-
-      const transactionData: TTransactions = {
-        type: transaction,
-        date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-        amount: amount,
-      };
-      get().handleTransactions(transactionData);
-    }
+    get().updateWallet(parseFloat(finalAmount.toString()).toFixed(2));
+    const data: TTransactions = {
+      type: transaction,
+      date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+      amount: amount,
+    };
+    get().handleTransactions(data);
   },
   betDeduction: (amount: number) => {
     const myWallet = get().wallet ?? "0.00";

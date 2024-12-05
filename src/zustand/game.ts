@@ -7,6 +7,12 @@ import { prizeMoney } from "../constants/App";
 import { supabase } from "../lib/supabase";
 import { number } from "yup";
 
+type TTransactions = {
+  type: string;
+  amount: number;
+  date: string;
+};
+
 type TActivities = {
   type: string;
   bet: TBet | string;
@@ -49,10 +55,11 @@ type TActions = {
   clearBoard: (data?: TBoard) => void;
   handleResetBoard: () => void;
   getTotal: () => void;
-  lockedIn: () => void;
+  lockedIn: (amount: number) => void;
   checkWin: (combination: TResult) => void;
   incrementBet: () => void;
   decrementBet: () => void;
+  handleWalletBetDeduction: (amount: number) => void;
   handleActivities: (data: TActivities) => void;
   setActivities: (transactions: any) => void;
   setIsWin: (value: boolean) => void;
@@ -208,6 +215,9 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
   setSelectedBoardIndex: (index: number) => {
     set(() => ({ selectedBoardIndex: index }));
   },
+  handleWalletBetDeduction: async (amount: number) => {
+    useWalletStore.getState().withdraw(amount, "Bet Deduction");
+  },
   incrementBet: () => {
     const targetIndex = get().selectedBoardIndex ?? 0;
     let currentBoards = get().boards;
@@ -217,7 +227,6 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
     currentBoards[targetIndex] = targetBoard;
 
     set(() => ({ boards: [...currentBoards] }));
-    useWalletStore.getState().withdraw(1, "Increment Bet");
 
     const transaction: TActivities = {
       type: "Increment Bet",
@@ -241,7 +250,6 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
     currentBoards[targetIndex] = targetBoard;
 
     set(() => ({ boards: [...currentBoards] }));
-    useWalletStore.getState().withdraw(1, "Decrement Bet");
 
     const transaction: TActivities = {
       type: "Decrement Bet",
@@ -256,7 +264,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
     get().handleActivities(transaction);
     get().getTotal();
   },
-  lockedIn: async () => {
+  lockedIn: async (amount: number) => {
     const prevTickets = get().tickets;
     const boards = get().boards;
     const combinations = boards.map((value) => {
@@ -278,7 +286,8 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
     const drawtimes = get().selectedDrawTime;
 
     const user = await supabase.auth.getUser();
-    drawtimes.map(async (drawtime) => {
+
+    drawtimes.map(async (drawtime, index) => {
       const serial = `E${dayjs().format("YY")}-${dayjs().format(
         "MM"
       )}-${Math.floor(100000 + Math.random() * 900000)}-${dayjs().format(
@@ -303,11 +312,13 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
       const { error } = await supabase.from("tickets").insert(prepData);
 
       if (!error) {
+        // needed for quick ticket generation
         prevTickets.push({
           ...prepData,
           dateTimePurchased: dayjs().format("YYYY-MM-DD HH:mm:ss A"),
           drawDate: dayjs().format("YYYY-MM-DD"), // can be a custom range later
         });
+
         set(() => ({ tickets: [...prevTickets] }));
 
         const lockedInBoard = get().lockedInBoards;
@@ -321,6 +332,9 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
         lockedInBoard.push(newLockedIn);
         get().getTotal();
         set(() => ({ lockedInBoards: [...lockedInBoard] }));
+        if (index === 0) {
+          get().handleWalletBetDeduction(amount);
+        }
       }
     });
   },
@@ -372,7 +386,6 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
     let currentBoards = get().boards;
 
     let targetBoard = currentBoards[targetIndex];
-
     if (targetBoard.status === "filled") {
       get().updateBoards(data);
       return;
@@ -386,7 +399,6 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
     };
 
     set(() => ({ boards: [...currentBoards] }));
-    useWalletStore.getState().withdraw(data.bet, "New Bet");
     get().getTotal();
 
     const transaction: TActivities = {
@@ -404,15 +416,14 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
   updateBoards: (data: TBet) => {
     const targetIndex = get().selectedBoardIndex ?? 0;
     let currentBoards = get().boards;
+
     let targetboard = currentBoards[targetIndex];
-    const currentBet = parseInt(targetboard.bet);
+
+    targetboard.combination = data.combination;
     const newBet = parseInt(data.bet.toString());
-
-    useWalletStore.getState().withdraw(newBet, "Update Bet");
-    useWalletStore.getState().deposit(currentBet, "Update Bet");
     targetboard.bet = newBet.toString();
-    currentBoards[targetIndex] = targetboard;
 
+    currentBoards[targetIndex] = targetboard;
     set(() => ({ boards: [...currentBoards] }));
 
     const transaction: TActivities = {
@@ -469,7 +480,6 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
     set(() => ({ transactions: [...(transactions ?? [])] }));
   },
   checkWin: async (result: TResult) => {
-    console.log(result);
     const user = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from("tickets")
@@ -477,7 +487,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
       .eq("status", "active")
       .eq("drawTime", result.drawtime)
       .eq("userid", user.data.user?.id);
-    console.log(error, data);
+
     if (!error && data.length > 0) {
       const ticketIds = data.map((obj) => obj.id);
 

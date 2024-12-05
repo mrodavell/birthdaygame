@@ -1,11 +1,12 @@
 import { View, SafeAreaView, ScrollView, useWindowDimensions, Alert, FlatList } from 'react-native'
-import { ActivityIndicator, Card, Divider, List, Text, useTheme } from 'react-native-paper'
+import { ActivityIndicator, Button, Card, Divider, List, Text, useTheme } from 'react-native-paper'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '../../../lib/supabase';
 import { Fragment, useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { heightScale, moderateWs, widthScale } from '../../../helpers/scaler';
+import { useGameStore } from '../../../zustand/game';
 
 type TResult = {
     id: number;
@@ -23,7 +24,7 @@ export default function results() {
     const dimensions = useWindowDimensions();
     const theme = useTheme();
 
-
+    const { checkWin } = useGameStore();
 
     const getResult = async () => {
         try {
@@ -31,13 +32,30 @@ export default function results() {
             const { data, error } = await supabase.from('drawresult').select().order('id', { ascending: false }).limit(10);
 
             if (error) {
-                Alert.alert('Error', 'Unable to fetch data from server');
-                return;
+                throw error;
             }
 
             setResults([...data]);
-        } catch (e) {
+        } catch (error: any) {
+            Alert.alert('Error', error.message, [{ text: 'OK' }]);
+        } finally {
+            setLoading(false);
+        }
+    }
 
+    const checkResult = async () => {
+        try {
+            setLoading(true);
+            const { data, error } = await supabase.from('drawresult').select().order('id', { ascending: false }).limit(1);
+
+            if (error) {
+                throw error;
+            }
+
+            const result = data[0];
+            checkWin(result);
+        } catch (error: any) {
+            Alert.alert('Error', error.message, [{ text: 'OK' }]);
         } finally {
             setLoading(false);
         }
@@ -82,6 +100,9 @@ export default function results() {
                                 </View>
                             </View>
                             <Divider style={{ height: 1, marginHorizontal: widthScale(10), marginTop: widthScale(10) }} />
+                            <View>
+                                <Button mode='contained' labelStyle={{ fontSize: moderateWs(14, 1) }} onPress={checkResult}>CHECK RESULT</Button>
+                            </View>
                             <View style={{ justifyContent: 'center', alignItems: 'center', width: '100%', borderWidth: 1, borderColor: 'transparent', marginTop: heightScale(10) }}>
                                 <Text style={{ fontSize: moderateWs(14, 1), marginLeft: widthScale(10) }}>Previous Results</Text>
                             </View>

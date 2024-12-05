@@ -2,12 +2,12 @@ import { View, FlatList, Alert, useWindowDimensions } from 'react-native'
 import React, { FC, Fragment, useEffect, useState } from 'react'
 import { Dates } from '../../constants/Dates';
 import CircleButton from '../circlebutton';
-import { ActivityIndicator, Button, Divider, IconButton, Modal, Portal, Text, TextInput, useTheme } from 'react-native-paper';
+import { ActivityIndicator, Button, Divider, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import { ScrollView } from 'react-native';
 import { useWalletStore } from '../../zustand/wallet';
-import { TBet, TBoard } from '../../types/game';
+import { TBet } from '../../types/game';
 import { useGameStore } from '../../zustand/game';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { heightScale, widthScale } from '../../helpers/scaler';
 
 const Calendar2: FC = () => {
@@ -74,13 +74,6 @@ const Calendar2: FC = () => {
         setBet(bet);
     }
 
-    const handleClear = () => {
-        setBet("");
-        setSelectedMonth("")
-        setSelectedDate("")
-        setSelectedLetters([])
-    }
-
     const incrementBet = () => {
         const newBet = parseInt(bet) + 1;
         handleBet(newBet.toString())
@@ -121,21 +114,15 @@ const Calendar2: FC = () => {
             return;
         }
 
-        handleConfirmPrompt("Locked in your bet?")
+        handleConfirmPrompt("Do you confirm this bet?")
     }
 
     const handleAddBet = () => {
 
         try {
             setProcessing(true);
-            if (wallet === null) {
-                Alert.alert("Wallet Warning", "Insufficient wallet funds");
-                return;
-            }
-
-            if (parseInt(bet) > parseInt(wallet)) {
-                Alert.alert("Wallet Warning", "Insufficient wallet funds");
-                return;
+            if (wallet === null || parseInt(bet) > parseInt(wallet)) {
+                throw new Error("Insufficient wallet funds");
             }
 
             const newdata: TBet = {
@@ -151,7 +138,7 @@ const Calendar2: FC = () => {
             handleBoards(newdata);
             router.back();
         } catch (error: any) {
-            console.log(error);
+            Alert.alert("Wallet Error", error.message, [{ text: 'OK' }]);
         } finally {
             setProcessing(false);
         }

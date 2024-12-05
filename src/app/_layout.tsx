@@ -56,18 +56,20 @@ export default function RootLayout() {
 
     const checkSession = async () => {
         const { data, error } = await supabase.auth.getSession()
-        if (!error && data.session?.access_token) {
+        if (error) {
+            throw error;
+        }
+        if (data.session?.access_token) {
             setUser(data.session.user.phone)
-            router.push("dashboard");
+            router.replace("dashboard");
         }
     }
 
     const getBettingStatus = async () => {
-        try {
-            const { data } = await supabase.from('setup').select('is_open_betting').single();
-            setIsOpenBet(data?.is_open_betting ?? false);
-        } catch (e) {
-            console.log(e)
+        const { data, error } = await supabase.from('setup').select('is_open_betting').single();
+        setIsOpenBet(data?.is_open_betting ?? false);
+        if (error) {
+            throw error;
         }
     }
 
@@ -77,12 +79,16 @@ export default function RootLayout() {
 
     useEffect(() => {
         const unsubscribe = NetInfo.addEventListener(state => {
-            if (state.isConnected && state.isInternetReachable) {
-                checkSession();
-                getBettingStatus();
-                fetchWallet();
-            } else {
-                Alert.alert('No Internet Connection', 'Please check your internet connection and try again.', [{ text: 'OK' }]);
+            try {
+                if (state.isConnected && state.isInternetReachable) {
+                    checkSession();
+                    getBettingStatus();
+                    fetchWallet();
+                } else {
+                    Alert.alert('No Internet Connection', 'Please check your internet connection and try again.', [{ text: 'OK' }]);
+                }
+            } catch (error: any) {
+                Alert.alert('Error', error.message, [{ text: 'OK' }]);
             }
         });
 

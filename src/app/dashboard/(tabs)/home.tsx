@@ -1,4 +1,4 @@
-import { Alert, ScrollView, useWindowDimensions, View } from 'react-native';
+import { Alert, BackHandler, ScrollView, useWindowDimensions, View } from 'react-native';
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
@@ -18,7 +18,6 @@ import { heightScale, moderateWs, widthScale } from '../../../helpers/scaler';
 import DrawTime from '../../../components/drawtime';
 import { supabase } from '../../../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useDebounce } from 'use-debounce';
 
 export default function Home() {
 
@@ -26,10 +25,8 @@ export default function Home() {
     const dimensions = useWindowDimensions();
     const screenWidth = dimensions.width;
     const { bottom } = useSafeAreaInsets();
-    const [withdrawAmount, setWithdrawAmount] = useState<string>("0");
-    const [withdrawValue] = useDebounce(withdrawAmount, 500);
-    const [depositAmount, setDepositAmount] = useState<string>("0");
-    const [depositValue] = useDebounce(depositAmount, 500);
+    const [withdrawAmount, setWithdrawAmount] = useState<string>("");
+    const [depositAmount, setDepositAmount] = useState<string>("");
     const [method, setMethod] = useState<string>("");
     const [action, setAction] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
@@ -56,6 +53,11 @@ export default function Home() {
         .subscribe()
 
     const handleWithdrawAmountSelect = (amount: string) => {
+
+        if (isNaN(parseInt(amount))) {
+            return;
+        }
+
         if (withdrawAmount === "") {
             setWithdrawAmount("0");
             return;
@@ -72,6 +74,10 @@ export default function Home() {
     }
 
     const handleDepositAmountSelect = (amount: string) => {
+        if (isNaN(parseInt(amount))) {
+            return;
+        }
+
         if (depositAmount === "") {
             setDepositAmount("0");
             return;
@@ -200,11 +206,16 @@ export default function Home() {
             return;
         }
 
+        if (parseFloat(wallet) < parseFloat(totalBet.toString())) {
+            handleAlerts("Insufficient Wallet Balance");
+            return;
+        }
+
         handleConfirmPrompt("This will lock in your bet for the upcoming draw");
     }
 
     const handleLockedIn = () => {
-        lockedIn();
+        lockedIn(totalBet);
         handleResetBoard();
         router.push('ticket');
     }
@@ -235,6 +246,35 @@ export default function Home() {
     const handleRefreshWallet = async () => {
         fetchWallet();
     }
+
+    useEffect(() => {
+        const onBackPress = () => {
+            Alert.alert(
+                'Exit App',
+                'Do you want to exit?',
+                [
+                    {
+                        text: 'Cancel',
+                        onPress: () => {
+                            // Do nothing
+                        },
+                        style: 'cancel',
+                    },
+                    { text: 'YES', onPress: () => BackHandler.exitApp() },
+                ],
+                { cancelable: false }
+            );
+
+            return true;
+        };
+
+        const backHandler = BackHandler.addEventListener(
+            'hardwareBackPress',
+            onBackPress
+        );
+
+        return () => backHandler.remove();
+    }, [])
 
     return (
         <SafeAreaView style={{ flex: 1, flexGrow: 1, flexDirection: 'column', paddingHorizontal: widthScale(10), marginBottom: bottom, justifyContent: 'flex-start' }}>
@@ -336,8 +376,8 @@ export default function Home() {
                     <View style={{ marginHorizontal: widthScale(20) }}>
                         <AmountPicker amount={depositAmount} handlePick={handleDepositAmountSelect} />
                         <TextInput
-                            value={depositValue}
-                            onChangeText={(text) => handleDepositAmountSelect(text)}
+                            value={depositAmount}
+                            onChangeText={(text) => setDepositAmount(text)}
                             onFocus={handleFocus}
                             keyboardType='numeric'
                             mode='outlined'
@@ -360,8 +400,8 @@ export default function Home() {
                     <View style={{ marginHorizontal: widthScale(20) }}>
                         <AmountPicker amount={withdrawAmount} handlePick={handleWithdrawAmountSelect} />
                         <TextInput
-                            value={withdrawValue}
-                            onChangeText={(text: string) => handleWithdrawAmountSelect(text)}
+                            value={withdrawAmount}
+                            onChangeText={(text: string) => setWithdrawAmount(text)}
                             onFocus={handleFocus}
                             keyboardType='numeric'
                             mode='outlined'

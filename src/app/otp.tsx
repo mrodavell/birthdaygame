@@ -39,7 +39,7 @@ export default function otp() {
             setLoading(true);
 
             // const { data, error } = await supabase.auth.verifyOtp({ phone: phone, token: otp, type: 'sms' })
-            // console.log({ data, error })
+
             if (otp !== "123456") {
                 setErrorText("OTP is invalid");
                 setError(true);
