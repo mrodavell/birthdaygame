@@ -26,7 +26,7 @@ export default function DrawerContent(props: any) {
                 throw error;
             }
 
-            router.replace("/");
+            router.push("/");
 
         } catch (error: any) {
             Alert.alert("Error", error.message, [{ text: 'OK' }]);
