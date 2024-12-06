@@ -18,6 +18,7 @@ export type TBet = {
 };
 
 export type TTicket = {
+  id?: number | string;
   userid?: string;
   dateTimePurchased?: string;
   drawDate?: string;

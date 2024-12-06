@@ -80,7 +80,7 @@ const CircleButton: FC<TCircleButtonProps> = ({ label, index, month, letters, da
                     width: widthScale(35),
                     backgroundColor: month === label ? theme.colors.primary : theme.colors.surface
                 }}>
-                    <Text style={{ fontSize: moderateWs(12, 1) }}>
+                    <Text style={{ fontSize: moderateWs(12, 1), fontWeight: 'bold' }}>
                         {label.length > 1 ? label : `0${label}`}
                     </Text>
                     <Text style={{ fontSize: moderateWs(8, 1) }}>
@@ -96,7 +96,7 @@ const CircleButton: FC<TCircleButtonProps> = ({ label, index, month, letters, da
                     height: heightScale(40),
                     backgroundColor: date === label ? theme.colors.primary : theme.colors.surface
                 }}>
-                    <Text style={{ fontSize: moderateWs(12, 1) }}>
+                    <Text style={{ fontSize: moderateWs(12, 1), fontWeight: 'bold' }}>
                         {label.length > 1 ? label : `0${label}`}
                     </Text>
                 </View>

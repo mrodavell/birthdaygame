@@ -265,7 +265,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
     get().getTotal();
   },
   lockedIn: async (amount: number) => {
-    const prevTickets = get().tickets;
+    const tickets: TTicket[] = [];
     const boards = get().boards;
     const combinations = boards.map((value) => {
       if (value.status === "empty") {
@@ -313,13 +313,13 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
 
       if (!error) {
         // needed for quick ticket generation
-        prevTickets.push({
+        tickets.push({
           ...prepData,
           dateTimePurchased: dayjs().format("YYYY-MM-DD HH:mm:ss A"),
           drawDate: dayjs().format("YYYY-MM-DD"), // can be a custom range later
         });
 
-        set(() => ({ tickets: [...prevTickets] }));
+        set(() => ({ tickets: [...tickets] }));
 
         const lockedInBoard = get().lockedInBoards;
 
