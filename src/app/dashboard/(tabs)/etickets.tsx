@@ -1,5 +1,5 @@
 import { View, SafeAreaView, useWindowDimensions, TouchableOpacity, Alert } from 'react-native'
-import { ActivityIndicator, Divider, List, Text, useTheme } from 'react-native-paper'
+import { ActivityIndicator, Button, Divider, List, Text, useTheme } from 'react-native-paper'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -67,7 +67,10 @@ export default function eticket() {
                             Tickets
                         </Text>
                     </View>
-                    <Divider style={{ height: 1, marginHorizontal: widthScale(10), marginTop: heightScale(15) }} />
+                    <Divider style={{ height: 1, marginHorizontal: widthScale(10), marginTop: widthScale(10) }} />
+                    <View>
+                        <Button mode='contained' labelStyle={{ fontSize: moderateWs(14, 1) }} onPress={getTickets}>RELOAD TICKETS</Button>
+                    </View>
                     <FlatList
                         data={tickets.reverse()}
                         renderItem={({ item, index }) => {
