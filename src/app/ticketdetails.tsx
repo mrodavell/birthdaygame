@@ -87,9 +87,9 @@ const TicketDetails = () => {
                         <View style={{ flexGrow: 1, justifyContent: 'center', marginTop: widthScale(30) }}>
                             <Text style={{ fontSize: moderateWs(12, 1), fontWeight: 'bold' }}>
                                 <Text>
-                                    Date & Time Purchased
+                                    Date & Time Purchased:
                                 </Text>
-                                <Text>
+                                <Text style={{ marginLeft: widthScale(5) }}>
                                     {dayjs().format("MMM-DD-YYYY - h:m A")}
                                 </Text>
                             </Text>
