@@ -105,7 +105,7 @@ export default function calculator() {
                         </Text>
                     </View>
                     <View style={{ borderRadius: 0, flex: 1, justifyContent: 'space-around', alignItems: 'center', flexDirection: 'row', marginTop: 10, gap: 10 }}>
-                        <TouchableOpacity onPress={() => handleLetters("F")} style={{ flex: 1, borderWidth: 1, borderRadius: widthScale(10) }}>
+                        <TouchableOpacity onPress={() => handleLetters("A")} style={{ flex: 1, borderWidth: 1, borderRadius: widthScale(10) }}>
                             <View
                                 style={{
                                     borderWidth: 1,
@@ -114,14 +114,14 @@ export default function calculator() {
                                     flex: 1,
                                     justifyContent: 'center',
                                     alignItems: 'center',
-                                    backgroundColor: letters.includes("F") ? theme.colors.primary : 'white',
+                                    backgroundColor: letters.includes("A") ? theme.colors.primary : 'white',
                                     height: heightScale(40)
                                 }}
                             >
-                                <Text style={{ fontSize: moderateWs(18, 1) }}>F</Text>
+                                <Text style={{ fontSize: moderateWs(18, 1) }}>A</Text>
                             </View>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => handleLetters("M")} style={{ flex: 1, borderWidth: 1, borderRadius: widthScale(10) }}>
+                        <TouchableOpacity onPress={() => handleLetters("B")} style={{ flex: 1, borderWidth: 1, borderRadius: widthScale(10) }}>
                             <View
                                 style={{
                                     borderWidth: 1,
@@ -130,16 +130,16 @@ export default function calculator() {
                                     flex: 1,
                                     justifyContent: 'center',
                                     alignItems: 'center',
-                                    backgroundColor: letters.includes("M") ? theme.colors.primary : 'white',
+                                    backgroundColor: letters.includes("B") ? theme.colors.primary : 'white',
                                     height: heightScale(40)
                                 }}
                             >
-                                <Text style={{ fontSize: moderateWs(18, 1) }}>M</Text>
+                                <Text style={{ fontSize: moderateWs(18, 1) }}>B</Text>
                             </View>
                         </TouchableOpacity>
                     </View>
                     <View style={{ borderRadius: 0, flex: 1, justifyContent: 'space-around', alignItems: 'center', flexDirection: 'row', marginTop: 10, gap: 10 }}>
-                        <TouchableOpacity onPress={() => handleLetters("S")} style={{ flex: 1, borderWidth: 1, borderRadius: widthScale(10) }}>
+                        <TouchableOpacity onPress={() => handleLetters("C")} style={{ flex: 1, borderWidth: 1, borderRadius: widthScale(10) }}>
                             <View
                                 style={{
                                     borderWidth: 1,
@@ -148,11 +148,11 @@ export default function calculator() {
                                     flex: 1,
                                     justifyContent: 'center',
                                     alignItems: 'center',
-                                    backgroundColor: letters.includes("S") ? theme.colors.primary : 'white',
+                                    backgroundColor: letters.includes("C") ? theme.colors.primary : 'white',
                                     height: heightScale(40)
                                 }}
                             >
-                                <Text style={{ fontSize: moderateWs(18, 1) }}>S</Text>
+                                <Text style={{ fontSize: moderateWs(18, 1) }}>C</Text>
                             </View>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => handleLetters("D")} style={{ flex: 1, borderWidth: 1, borderRadius: widthScale(10) }}>
