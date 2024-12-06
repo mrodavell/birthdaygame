@@ -54,6 +54,7 @@ export default function results() {
 
             const result = data[0];
             checkWin(result);
+            getResult();
         } catch (error: any) {
             Alert.alert('Error', error.message, [{ text: 'OK' }]);
         } finally {
