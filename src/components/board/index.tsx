@@ -1,11 +1,11 @@
 import { Alert, TouchableOpacity, View } from 'react-native'
-import React, { FC, Fragment, useEffect, useState } from 'react'
-import { Card, IconButton, Text, TextInput, useTheme } from 'react-native-paper'
+import React, { FC, Fragment, useState } from 'react'
+import { Card, IconButton, Text, useTheme } from 'react-native-paper'
 import Calendar from '../calendar'
-import { TBoard, TCombination } from '../../types/game'
+import { TCombination } from '../../types/game'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { useGameStore } from '../../zustand/game'
-import { heightScale, moderateWs, widthScale } from '../../helpers/scaler'
+import { moderateWs, widthScale } from '../../helpers/scaler'
 import { router } from 'expo-router'
 
 type TBoardProps = {

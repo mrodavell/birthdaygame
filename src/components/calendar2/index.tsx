@@ -8,7 +8,7 @@ import { useWalletStore } from '../../zustand/wallet';
 import { TBet } from '../../types/game';
 import { useGameStore } from '../../zustand/game';
 import { router } from 'expo-router';
-import { heightScale, widthScale } from '../../helpers/scaler';
+import { heightScale, moderateWs, widthScale } from '../../helpers/scaler';
 
 const Calendar2: FC = () => {
 
@@ -195,8 +195,8 @@ const Calendar2: FC = () => {
     return (
         <View>
             <View style={{ display: 'flex', flexDirection: "row", alignItems: 'center', justifyContent: 'space-between', padding: widthScale(10) }}>
-                <Text variant='titleLarge'>Board {data.label}</Text>
-                <IconButton icon="close" onPress={() => router.back()} />
+                <Text style={{ fontSize: moderateWs(18, 1), marginLeft: widthScale(10) }}>Board {data.label} - Combination</Text>
+                <IconButton iconColor={theme.colors.tertiary} icon="close-circle" onPress={() => router.back()} />
             </View>
             <ScrollView style={{ height: 'auto', marginBottom: widthScale(60) }} showsVerticalScrollIndicator={true}>
                 {processing && <View style={{ flex: 1, height: heightScale(screenHeight - 200), alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator size={widthScale(50)} /></View>}
@@ -232,11 +232,12 @@ const Calendar2: FC = () => {
                                 <Text variant='titleMedium' style={{ marginLeft: widthScale(10) }}>Letter/s</Text>
                                 <View style={{ height: widthScale(150), alignItems: 'center' }}>
                                     <FlatList
-                                        data={["A", "B", "C", "D"]}
+                                        data={["F", "M", "S", "D"]}
                                         renderItem={(item) => <CircleButton letters={selectedLetters} type='letters' label={item.item.toString()} index={item.index} handleLetter={handleLetter} />}
                                         numColumns={2}
                                         style={{ flex: 1 }}
                                         contentContainerStyle={{ paddingVertical: widthScale(10) }}
+                                        showsVerticalScrollIndicator={false}
                                         scrollEnabled={false}
                                     />
                                 </View>
