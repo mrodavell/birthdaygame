@@ -232,7 +232,7 @@ const Calendar2: FC = () => {
                                 <Text variant='titleMedium' style={{ marginLeft: widthScale(10) }}>Letter/s</Text>
                                 <View style={{ height: widthScale(150), alignItems: 'center' }}>
                                     <FlatList
-                                        data={["F", "M", "S", "D"]}
+                                        data={["A", "B", "C", "D"]}
                                         renderItem={(item) => <CircleButton letters={selectedLetters} type='letters' label={item.item.toString()} index={item.index} handleLetter={handleLetter} />}
                                         numColumns={2}
                                         style={{ flex: 1 }}
