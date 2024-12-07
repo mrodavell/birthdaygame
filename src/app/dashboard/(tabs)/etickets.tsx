@@ -147,7 +147,7 @@ export default function eticket() {
                     <Text style={{ fontSize: moderateWs(20, 1) }}>No tickets available</Text>
                 </View>
             }
-            {!loading &&
+            {!loading && tickets.length > 0 &&
                 <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: widthScale(70) }}>
                         <MaterialCommunityIcons name='qrcode' size={widthScale(20)} style={{ marginRight: widthScale(8) }} />
