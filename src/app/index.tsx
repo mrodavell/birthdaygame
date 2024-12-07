@@ -43,7 +43,7 @@ export default function Main() {
   }, [])
 
   return (
-    <SafeAreaView style={{ flex: 1, paddingHorizontal: widthScale(20), backgroundColor: theme.colors.primary }}>
+    <SafeAreaView style={{ flex: 1, paddingHorizontal: widthScale(20), backgroundColor: loading ? 'white' : theme.colors.primary }}>
       {!loading &&
         <ScrollView style={{ maxHeight: screenHeight }} showsVerticalScrollIndicator={false}>
           <View style={{ flex: 1, flexGrow: 1, flexDirection: 'column', justifyContent: 'flex-start', gap: 20, marginTop: '15%' }}>
@@ -112,9 +112,13 @@ export default function Main() {
       }
 
       {loading &&
-        <Indicator visible={loading} onDismiss={toggleIndicator} title="Loading data...">
-          <ActivityIndicator size={widthScale(50)} />
-        </Indicator>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Image source={require("../../assets/logo.png")}
+            style={{ alignSelf: 'center', height: heightScale(100), width: widthScale(100) }}
+          />
+          <ActivityIndicator size={widthScale(50)} style={{ marginTop: widthScale(10) }} />
+          <Text style={{ fontSize: widthScale(16), marginTop: widthScale(10) }}>Preparing data...</Text>
+        </View>
       }
     </SafeAreaView>
   );

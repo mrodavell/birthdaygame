@@ -1,8 +1,8 @@
-import { View, SafeAreaView, ScrollView, useWindowDimensions, Alert, FlatList } from 'react-native'
-import { ActivityIndicator, Button, Card, Divider, List, Text, useTheme } from 'react-native-paper'
+import { View, SafeAreaView, useWindowDimensions, Alert, FlatList, RefreshControl } from 'react-native'
+import { ActivityIndicator, Button, Divider, List, Text, useTheme } from 'react-native-paper'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { supabase } from '../../../lib/supabase';
-import { Fragment, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { heightScale, moderateWs, widthScale } from '../../../helpers/scaler';
@@ -20,6 +20,8 @@ export default function results() {
 
     const { top } = useSafeAreaInsets()
     const [loading, setLoading] = useState<boolean>(false);
+    const [checking, setChecking] = useState<boolean>(false);
+    const [scrollLoading, setScrollLoading] = useState<boolean>(false);
     const [results, setResults] = useState<TResult[]>([]);
     const [start, setStart] = useState<number>(0);
     const [end, setEnd] = useState<number>(9);
@@ -48,6 +50,8 @@ export default function results() {
     const getResult = async () => {
         try {
             setLoading(true);
+            setStart(0);
+            setEnd(9);
             const { data, error } = await supabase
                 .from('drawresult')
                 .select()
@@ -68,8 +72,7 @@ export default function results() {
 
     const getPaginatedResult = async (start = 0, end = 9) => {
         try {
-            setLoading(true);
-            setResults([]);
+            setScrollLoading(true);
             const { data, error } = await supabase
                 .from('drawresult')
                 .select()
@@ -80,13 +83,14 @@ export default function results() {
                 throw error;
             }
 
+            setResults([]);
             const prevState = [...results];
             prevState.push(...data);
             setResults([...prevState]);
         } catch (error: any) {
             Alert.alert('Error', error.message, [{ text: 'OK' }]);
         } finally {
-            setLoading(false);
+            setScrollLoading(false);
         }
     }
 
@@ -116,7 +120,7 @@ export default function results() {
 
     const checkResult = async () => {
         try {
-            setLoading(true);
+            setChecking(true);
             const { data, error } = await supabase.from('drawresult').select().order('id', { ascending: false }).limit(1);
 
             if (error) {
@@ -125,11 +129,10 @@ export default function results() {
 
             const result = data[0];
             checkWin(result);
-            getResult();
         } catch (error: any) {
             Alert.alert('Error', error.message, [{ text: 'OK' }]);
         } finally {
-            setLoading(false);
+            setChecking(false);
         }
     }
 
@@ -145,73 +148,105 @@ export default function results() {
         <SafeAreaView
             style={{
                 flex: 1,
-                paddingHorizontal: widthScale(5),
-                marginTop: heightScale(top),
+                paddingHorizontal: widthScale(15),
+                marginTop: heightScale(top + 5),
+                marginBottom: widthScale(10),
                 justifyContent: 'flex-start',
             }}
         >
+            {!loading && !scrollLoading && results.length === 0 &&
+                <View style={{ minHeight: heightScale(dimensions.height * 0.5), flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <MaterialCommunityIcons name='database-search-outline' size={widthScale(110)} color='gray' />
+                    <Text style={{ fontSize: moderateWs(20, 1) }}>No results available</Text>
+                </View>
+            }
             {!loading &&
-                <View style={{
-                    padding: widthScale(10),
-                    flex: 1
-                }}>
-                    {results.length === 0 && <View style={{ minHeight: heightScale(dimensions.height * 0.5), flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        <MaterialCommunityIcons name='database-search-outline' size={widthScale(110)} color='gray' />
-                        <Text style={{ fontSize: moderateWs(20, 1) }}>No results available</Text>
-                    </View>}
-                    {results.length !== 0 &&
-                        <View style={{ flex: 1 }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', marginTop: widthScale(60), marginLeft: widthScale(10) }}>
-                                <MaterialCommunityIcons name='clipboard-text-clock' size={widthScale(20)} style={{ marginRight: widthScale(8) }} />
-                                <View style={{ flexDirection: 'row' }}>
-                                    <Text style={{ fontSize: moderateWs(20, 1) }}>
-                                        Latest Result:
+                <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', marginTop: widthScale(60), marginLeft: widthScale(10) }}>
+                        <View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
+                                <MaterialCommunityIcons name='calendar-outline' size={widthScale(20)} style={{ marginRight: widthScale(8) }} />
+                                <Text style={{ fontSize: moderateWs(20, 1) }}>
+                                    Latest Result:
+                                </Text>
+                                {results[0] &&
+                                    <Text
+                                        style={{
+                                            fontSize: moderateWs(20, 1),
+                                            color: theme.colors.tertiary,
+                                            fontWeight: 'bold',
+                                            marginLeft: widthScale(10)
+                                        }}>
+                                        {results[0].result}
                                     </Text>
-                                    <Text style={{ fontSize: moderateWs(20, 1), color: theme.colors.tertiary, fontWeight: 'bold', marginLeft: widthScale(10) }}>{results[0].result}</Text>
-                                </View>
+                                }
                             </View>
-                            <Divider style={{ height: 1, marginHorizontal: widthScale(10), marginTop: widthScale(10) }} />
-                            <View>
-                                <Button mode='contained' labelStyle={{ fontSize: moderateWs(14, 1) }} onPress={checkResult}>CHECK RESULT</Button>
+                            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
+                                <MaterialCommunityIcons name='clock-outline' size={widthScale(20)} style={{ marginRight: widthScale(8) }} />
+                                <Text style={{ fontSize: moderateWs(20, 1) }}>
+                                    Draw Time:
+                                </Text>
+                                {results[0] &&
+                                    <Text
+                                        style={{
+                                            fontSize: moderateWs(20, 1),
+                                            color: theme.colors.tertiary,
+                                            fontWeight: 'bold',
+                                            marginLeft: widthScale(10)
+                                        }}>
+                                        {results[0].drawtime} {results[0].drawtime === '10:00' ? 'AM' : 'PM'}
+                                    </Text>
+                                }
                             </View>
-                            <View style={{ justifyContent: 'center', alignItems: 'center', width: '100%', borderWidth: 1, borderColor: 'transparent', marginTop: heightScale(10) }}>
-                                <Text style={{ fontSize: moderateWs(14, 1), marginLeft: widthScale(10) }}>Previous Results</Text>
-                            </View>
-                            <FlatList
-                                style={{ flex: 1, marginHorizontal: widthScale(5) }}
-                                onEndReachedThreshold={0.8}
-                                onEndReached={() => handleEndReached()}
-                                showsVerticalScrollIndicator={false}
-                                data={results}
-                                renderItem={({ item, index }) => {
-                                    const isLast = index === results.length - 1;
-                                    return <View key={`results-${item.id}`} style={{ marginTop: heightScale(10), paddingHorizontal: widthScale(3), marginBottom: isLast ? widthScale(20) : widthScale(0) }}>
-                                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-                                                <MaterialCommunityIcons name='calendar' size={widthScale(12)} style={{ marginRight: widthScale(2), marginBottom: heightScale(5) }} />
-                                                <Text style={{ fontSize: moderateWs(12, 1), marginBottom: heightScale(5) }}>Date: {dayjs(item.create_at).format('MMM DD, YYYY')}</Text>
-                                            </View>
-                                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-                                                <MaterialCommunityIcons name='clock-outline' size={widthScale(12)} style={{ marginRight: widthScale(2), marginBottom: heightScale(5) }} />
-                                                <Text style={{ fontSize: moderateWs(12, 1), marginBottom: heightScale(5) }}>Time: {`${item.drawtime} ${item.drawtime === '10:00' ? 'AM' : 'PM'}`}</Text>
-                                            </View>
-                                        </View>
-                                        <List.Item
-                                            style={{
-                                                padding: widthScale(10),
-                                                shadowOffset: { width: 0, height: 2 },
-                                                shadowOpacity: 0.25,
-                                                shadowRadius: 3.84,
-                                                elevation: 5,
-                                                backgroundColor: theme.colors.surface,
-                                                borderRadius: 5
-                                            }}
-                                            title={`Result: ${item.result}`}
-                                            titleStyle={{ color: theme.colors.secondary, fontSize: moderateWs(14, 1) }}
-                                        />
+                        </View>
+                    </View>
+                    <Divider style={{ height: 1, marginHorizontal: widthScale(10), marginTop: widthScale(10) }} />
+                    <View>
+                        <Button loading={checking} mode='contained' labelStyle={{ fontSize: moderateWs(14, 1) }} onPress={checkResult}>CHECK RESULT</Button>
+                    </View>
+                    <View style={{ justifyContent: 'center', alignItems: 'center', width: '100%', borderWidth: 1, borderColor: 'transparent', marginTop: heightScale(10) }}>
+                        <Text style={{ fontSize: moderateWs(14, 1), marginLeft: widthScale(10) }}>Previous Results</Text>
+                    </View>
+                    <FlatList
+                        style={{ flex: 1, marginHorizontal: widthScale(5) }}
+                        onEndReachedThreshold={0.8}
+                        onEndReached={() => handleEndReached()}
+                        refreshControl={<RefreshControl refreshing={loading} onRefresh={() => getResult()} />}
+                        showsVerticalScrollIndicator={false}
+                        data={results}
+                        renderItem={({ item, index }) => {
+                            const isLast = index === results.length - 1;
+                            return <View key={`results-${item.id}`} style={{ marginTop: heightScale(10), paddingHorizontal: widthScale(3), marginBottom: isLast ? widthScale(20) : widthScale(0) }}>
+                                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+                                        <MaterialCommunityIcons name='calendar' size={widthScale(12)} style={{ marginRight: widthScale(2), marginBottom: heightScale(5) }} />
+                                        <Text style={{ fontSize: moderateWs(12, 1), marginBottom: heightScale(5) }}>Date: {dayjs(item.create_at).format('MMM DD, YYYY')}</Text>
                                     </View>
-                                }}
-                            />
+                                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+                                        <MaterialCommunityIcons name='clock-outline' size={widthScale(12)} style={{ marginRight: widthScale(2), marginBottom: heightScale(5) }} />
+                                        <Text style={{ fontSize: moderateWs(12, 1), marginBottom: heightScale(5) }}>Draw Time: {`${item.drawtime} ${item.drawtime === '10:00' ? 'AM' : 'PM'}`}</Text>
+                                    </View>
+                                </View>
+                                <List.Item
+                                    style={{
+                                        padding: widthScale(10),
+                                        shadowOffset: { width: 0, height: 2 },
+                                        shadowOpacity: 0.25,
+                                        shadowRadius: 3.84,
+                                        elevation: 5,
+                                        backgroundColor: theme.colors.surface,
+                                        borderRadius: 5
+                                    }}
+                                    title={`Result: ${item.result}`}
+                                    titleStyle={{ color: theme.colors.tertiary, fontSize: moderateWs(16, 1), fontWeight: 'bold', textAlign: 'center' }}
+                                />
+                            </View>
+                        }}
+                    />
+                    {scrollLoading &&
+                        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                            <ActivityIndicator animating={true} color={theme.colors.primary} size={30} />
+                            <Text style={{ marginTop: heightScale(10) }}>Loading More Data...</Text>
                         </View>
                     }
                 </View>

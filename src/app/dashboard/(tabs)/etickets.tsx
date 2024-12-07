@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { TTicket } from '../../../types/game';
 import { useEffect, useState } from 'react';
 import { heightScale, moderateWs, widthScale } from '../../../helpers/scaler';
-import { FlatList } from 'react-native-gesture-handler';
+import { FlatList, RefreshControl } from 'react-native-gesture-handler';
 import { supabase } from '../../../lib/supabase';
 import dayjs from 'dayjs';
 
@@ -17,6 +17,7 @@ export default function eticket() {
     const theme = useTheme();
     const [tickets, setTickets] = useState<TTicket[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
+    const [scrollLoading, setScrollLoading] = useState<boolean>(false);
     const [start, setStart] = useState<number>(0);
     const [end, setEnd] = useState<number>(9);
     const [ticketCount, setTicketCount] = useState<number>(0);
@@ -33,11 +34,13 @@ export default function eticket() {
                 .select('*', { count: 'exact', head: true })
                 .eq('userid', user.data.user?.id)
 
-            if (!error) {
-                setTicketCount(count ?? 0);
+
+            if (error) {
+                throw error;
             }
 
-            throw error;
+            setTicketCount(count ?? 0);
+
         } catch (error: any) {
             Alert.alert('Error', error.message, [{ text: 'OK' }]);
         }
@@ -46,20 +49,20 @@ export default function eticket() {
     const getTickets = async () => {
         try {
             setLoading(true);
+            setStart(0);
+            setEnd(9);
             const user = await supabase.auth.getUser();
             const { data, error } = await supabase
                 .from('tickets').select('*')
                 .eq('userid', user.data.user?.id)
                 .order('id', { ascending: false })
-                .range(0, 9)
-                ;
+                .range(0, 9);
 
             if (error) {
                 throw error;
             }
 
             setTickets(data ?? []);
-
         } catch (error: any) {
             Alert.alert('Error', error.message, [{ text: 'OK' }]);
         } finally {
@@ -70,8 +73,7 @@ export default function eticket() {
 
     const getPaginatedTickets = async (start = 0, end = 9) => {
         try {
-            setLoading(true);
-            setTickets([]);
+            setScrollLoading(true);
             const user = await supabase.auth.getUser();
             const { data, error } = await supabase
                 .from('tickets').select('*')
@@ -84,13 +86,14 @@ export default function eticket() {
                 throw error;
             }
 
+            setTickets([]);
             const prevState = [...tickets];
             prevState.push(...data ?? []);
             setTickets([...prevState]);
         } catch (error: any) {
             Alert.alert('Error', error.message, [{ text: 'OK' }]);
         } finally {
-            setLoading(false);
+            setScrollLoading(false);
         }
 
     }
@@ -128,11 +131,22 @@ export default function eticket() {
     }, [])
 
     return (
-        <SafeAreaView style={{ flex: 1, flexGrow: 1, flexDirection: 'column', paddingHorizontal: widthScale(10), marginTop: widthScale(top), marginBottom: widthScale(10), justifyContent: 'flex-start' }}>
-            {!loading && tickets.length === 0 && <View style={{ minHeight: heightScale(dimensions.height * 0.5), flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <MaterialCommunityIcons name='database-search-outline' size={widthScale(110)} color='gray' />
-                <Text style={{ fontSize: moderateWs(20, 1) }}>No tickets available</Text>
-            </View>}
+        <SafeAreaView
+            style={{
+                flex: 1,
+                flexGrow: 1,
+                flexDirection: 'column',
+                paddingHorizontal: widthScale(15),
+                marginTop: widthScale(top + 5),
+                marginBottom: widthScale(10),
+                justifyContent: 'flex-start'
+            }}>
+            {!loading && !scrollLoading && tickets.length === 0 &&
+                <View style={{ minHeight: heightScale(dimensions.height * 0.5), flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <MaterialCommunityIcons name='database-search-outline' size={widthScale(110)} color='gray' />
+                    <Text style={{ fontSize: moderateWs(20, 1) }}>No tickets available</Text>
+                </View>
+            }
             {!loading &&
                 <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: widthScale(70) }}>
@@ -149,6 +163,8 @@ export default function eticket() {
                         style={{ flex: 1 }}
                         onEndReached={() => handleEndReached()}
                         onEndReachedThreshold={0.8}
+                        refreshControl={<RefreshControl refreshing={loading} onRefresh={() => getTickets()} />}
+                        showsVerticalScrollIndicator={false}
                         data={tickets}
                         renderItem={({ item, index }) => {
                             const isLast = index === tickets.length - 1;
@@ -174,6 +190,12 @@ export default function eticket() {
                             </TouchableOpacity>
                         }}
                     />
+                    {scrollLoading &&
+                        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+                            <ActivityIndicator animating={true} color={theme.colors.primary} size={30} />
+                            <Text style={{ marginTop: heightScale(10) }}>Loading More Data...</Text>
+                        </View>
+                    }
                 </View>
             }
             {

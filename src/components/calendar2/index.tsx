@@ -183,6 +183,15 @@ const Calendar2: FC = () => {
         ])
     }
 
+    useEffect(() => {
+        () => {
+            setSelectedMonth(null);
+            setSelectedDate(null);
+            setSelectedLetters([]);
+            setBet("10");
+        }
+    }, [])
+
     return (
         <View>
             <View style={{ display: 'flex', flexDirection: "row", alignItems: 'center', justifyContent: 'space-between', padding: widthScale(10) }}>

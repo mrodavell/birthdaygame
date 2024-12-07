@@ -49,11 +49,6 @@ export default function RootLayout() {
         setResults(payload.new);
     }
 
-    supabase
-        .channel('drawresult')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'drawresult' }, handleResult)
-        .subscribe()
-
     const checkSession = async () => {
         const { data, error } = await supabase.auth.getSession()
         if (error) {
@@ -98,6 +93,11 @@ export default function RootLayout() {
             unsubscribe();
         }
     }, [])
+
+    supabase
+        .channel('drawresult')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'drawresult' }, handleResult)
+        .subscribe()
 
     return (
         <PaperProvider theme={paperTheme}>

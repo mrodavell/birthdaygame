@@ -33,6 +33,7 @@ type TResult = {
 };
 
 type TState = {
+  loading: boolean;
   tickets: TTicket[];
   lockedInBoards: TLockedInBoard[];
   boards: TBoard[];
@@ -133,6 +134,7 @@ const emptyBoard = [
 ];
 
 export const useGameStore = create<TState & TActions>((set, get) => ({
+  loading: false,
   isWin: false,
   isOpenBet: false,
   totalWin: 0,
@@ -265,6 +267,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
     get().getTotal();
   },
   lockedIn: async (amount: number) => {
+    set(() => ({ loading: true }));
     const tickets: TTicket[] = [];
     const boards = get().boards;
     const combinations = boards.map((value) => {
@@ -337,6 +340,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
         }
       }
     });
+    set(() => ({ loading: false }));
   },
   clearBoard: async (board?: TBoard | undefined) => {
     if (board === undefined) {
