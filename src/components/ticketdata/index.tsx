@@ -17,7 +17,7 @@ type TTicketProps = {
     dateTimePurchased?: string;
 }
 
-const TicketData: FC<TTicketProps> = ({ boards, totalBet, phone, drawDate, drawNumber, serial, drawTime, dateTimePurchased }) => {
+const TicketData: FC<TTicketProps> = ({ boards, phone, drawDate, drawNumber, serial, drawTime, dateTimePurchased }) => {
 
     const actualBet = boards.reduce((acc, curr) => {
         if (curr.bet === "") return acc

@@ -18,6 +18,7 @@ import { heightScale, moderateWs, widthScale } from '../../../helpers/scaler';
 import DrawTime from '../../../components/drawtime';
 import { supabase } from '../../../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDebounce } from 'use-debounce';
 
 export default function Home() {
 
@@ -42,7 +43,7 @@ export default function Home() {
     const isOpenBet = useGameStore((state) => state.isOpenBet);
     const { deposit, withdraw, fetchWallet } = useWalletStore();
     const { lockedIn, handleResetBoard, setIsOpenBet } = useGameStore();
-
+    const fetchingWallet = useWalletStore((state) => state.fetching);
     const handleOpenBet = async (payload: any) => {
         await AsyncStorage.setItem('is_open_betting', payload.new.is_open_betting?.toString() ?? "false");
         setIsOpenBet(payload.new.is_open_betting ?? false)
@@ -284,6 +285,10 @@ export default function Home() {
         return () => backHandler.remove();
     }, [])
 
+    useEffect(() => {
+        fetchWallet();
+    }, [])
+
     return (
         <SafeAreaView style={{ flex: 1, flexGrow: 1, flexDirection: 'column', paddingHorizontal: widthScale(10), marginBottom: bottom, justifyContent: 'flex-start' }}>
             {isOpenBet &&
@@ -314,7 +319,15 @@ export default function Home() {
                         <View style={{ justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
                             <Text style={{ fontSize: moderateWs(16, 1), fontWeight: 'bold', color: 'gray' }}>Wallet Balance</Text>
                         </View>
-                        <Text style={{ fontSize: moderateWs(20, 1), fontWeight: 'bold' }}>P {parseFloat(wallet.toString()).toFixed(2)}</Text>
+                        {fetchingWallet &&
+                            <View style={{ flexDirection: 'row' }}>
+                                <ActivityIndicator animating={true} style={{ marginRight: widthScale(10) }} size={moderateWs(15, 1)} />
+                                <Text>Loading wallet balance...</Text>
+                            </View>
+                        }
+                        {!fetchingWallet &&
+                            <Text style={{ fontSize: moderateWs(20, 1), fontWeight: 'bold' }}>P {parseFloat(wallet.toString()).toFixed(2)}</Text>
+                        }
                     </View>
                     <View style={{ flex: 2, justifyContent: 'center' }}>
                         {fetching &&
@@ -343,7 +356,7 @@ export default function Home() {
                     <MaterialCommunityIcons name='calendar' size={widthScale(15)} color={theme.colors.tertiary} />
                     <Text style={{ fontSize: moderateWs(14, 1), fontWeight: 'bold', color: 'black', marginLeft: widthScale(5) }}>Draw Date: {dayjs().format('MM/DD/YYYY')} </Text>
                 </View>
-                <Text>Please pick 1 or multiple active draw time</Text>
+                <Text>Pick 1 or multiple active draw time</Text>
                 <DrawTime isOpenBet={isOpenBet} />
             </View>
             <View style={{ flexDirection: 'row' }}>
@@ -367,7 +380,7 @@ export default function Home() {
             </ScrollView>
             <View style={{ position: 'absolute', borderTopWidth: 1, borderTopColor: theme.colors.backdrop, bottom: 0, width: screenWidth, borderTopLeftRadius: widthScale(8), borderTopRightRadius: widthScale(8), paddingTop: widthScale(5), paddingBottom: widthScale(15), backgroundColor: theme.colors.surface }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexGrow: 1, marginHorizontal: widthScale(15), marginTop: heightScale(5) }}>
-                    <Text variant='titleLarge' style={{ marginLeft: widthScale(10), fontSize: moderateWs(18, 1) }}>
+                    <Text variant='titleLarge' style={{ marginLeft: widthScale(10), fontSize: moderateWs(18, 1), fontWeight: 'bold' }}>
                         Total Bet: {parseFloat(totalBet.toString()).toFixed(2)}
                     </Text>
                     <Button

@@ -11,6 +11,7 @@ type TTransactions = {
 };
 
 type TState = {
+  fetching: boolean;
   wallet: string | null;
   transactions: TTransactions[];
 };
@@ -27,9 +28,11 @@ type TActions = {
 };
 
 export const useWalletStore = create<TState & TActions>((set, get) => ({
+  fetching: false,
   wallet: "0.00",
   transactions: [],
   fetchWallet: async () => {
+    set(() => ({ fetching: true }));
     const user = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from("profiles")
@@ -42,8 +45,10 @@ export const useWalletStore = create<TState & TActions>((set, get) => ({
     }
 
     set(() => ({ wallet: data?.wallet }));
+    set(() => ({ fetching: false }));
   },
   updateWallet: async (amount: string) => {
+    set(() => ({ fetching: true }));
     const user = await supabase.auth.getUser();
     const { error } = await supabase
       .from("profiles")
@@ -52,7 +57,9 @@ export const useWalletStore = create<TState & TActions>((set, get) => ({
 
     if (!error) {
       get().fetchWallet();
+      return;
     }
+    set(() => ({ fetching: false }));
   },
   setWallet: async (amount: string) => {
     await AsyncStorage.setItem("wallet", amount);

@@ -1,7 +1,7 @@
 import { View, Text } from 'react-native'
 import React, { FC, Fragment, useEffect, useState } from 'react'
 import { useTheme } from 'react-native-paper';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { heightScale, moderateWs, widthScale } from '../../helpers/scaler';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import duration from 'dayjs/plugin/duration';
@@ -14,6 +14,7 @@ const CountDown: FC = () => {
     const theme = useTheme();
     const currentTime = dayjs();
     const isOpenBet = useGameStore((state => state.isOpenBet));
+    const { setCurrentDrawTime } = useGameStore();
     const tenAm = currentTime.set('hour', 10).set('minute', 0).set('second', 0).set('millisecond', 0);
     const twoPm = currentTime.set('hour', 14).set('minute', 0).set('second', 0).set('millisecond', 0);
     const fivePm = currentTime.set('hour', 17).set('minute', 0).set('second', 0).set('millisecond', 0);
@@ -30,6 +31,7 @@ const CountDown: FC = () => {
     };
 
     const getTimeDiffInSeconds = () => {
+
         let timeDiffInSeconds = 0;
         if (currentTime.isBefore(tenAm)) {
             timeDiffInSeconds = tenAm.diff(currentTime, 'second');
@@ -39,6 +41,8 @@ const CountDown: FC = () => {
             timeDiffInSeconds = fivePm.diff(currentTime, 'second');
         } else if (currentTime.isBefore(ninePm)) {
             timeDiffInSeconds = ninePm.diff(currentTime, 'second');
+        } else {
+            setCurrentDrawTime("");
         }
 
         return timeDiffInSeconds;

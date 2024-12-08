@@ -1,3 +1,9 @@
+
+if (__DEV__) {
+    require("../../ReactotronConfig");
+}
+
+
 import { router, Stack } from 'expo-router';
 import { PaperProvider } from 'react-native-paper';
 import { Alert, AppState, useColorScheme } from 'react-native';
@@ -11,7 +17,6 @@ import { useWalletStore } from '../zustand/wallet';
 import { useResultsStore } from '../zustand/results';
 import { useGameStore } from '../zustand/game';
 import { useUserStore } from '../zustand/user';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '../config/toast-config';
 import CongratsDialog from '../components/congratsdialog';
@@ -31,7 +36,6 @@ AppState.addEventListener('change', (state) => {
 })
 
 SplashScreen.preventAutoHideAsync();
-
 
 
 export default function RootLayout() {

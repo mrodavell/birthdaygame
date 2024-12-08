@@ -16,7 +16,7 @@ const AmountPicker: FC<TAmountPickerProps> = ({ amount, handlePick }) => {
     const [pick, setPick] = useState<string>("")
 
     const handlePicking = (amount: string) => {
-        if (pick === amount) {
+        if (pick === amount && amount !== "0" && pick !== "") {
             setPick("0")
             if (handlePick) {
                 handlePick("0")

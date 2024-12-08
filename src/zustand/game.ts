@@ -3,15 +3,8 @@ import { create } from "zustand";
 import { TBet, TBoard, TTicket } from "../types/game";
 import { useWalletStore } from "./wallet";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { prizeMoney } from "../constants/App";
+import { DrawTimes, prizeMoney } from "../constants/App";
 import { supabase } from "../lib/supabase";
-import { number } from "yup";
-
-type TTransactions = {
-  type: string;
-  amount: number;
-  date: string;
-};
 
 type TActivities = {
   type: string;
@@ -37,6 +30,7 @@ type TState = {
   tickets: TTicket[];
   lockedInBoards: TLockedInBoard[];
   boards: TBoard[];
+  currentDrawTime: string;
   selectedDrawTime: string[];
   selectedBoardIndex?: number;
   bets: TBet[];
@@ -68,6 +62,8 @@ type TActions = {
   setSelectedDrawTime: (time: string[]) => void;
   setIsOpenBet: (value: boolean) => void;
   clearTickets: () => void;
+  setCurrentDrawTime: (time: string) => void;
+  getDrawTime: () => void;
 };
 
 const emptyBoard = [
@@ -139,6 +135,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
   isOpenBet: false,
   totalWin: 0,
   winCombination: "",
+  currentDrawTime: "",
   boards: [
     {
       label: "A",
@@ -268,7 +265,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
   },
   lockedIn: async (amount: number) => {
     set(() => ({ loading: true }));
-    const tickets: TTicket[] = [];
+    let ticketList: any[] = [];
     const boards = get().boards;
     const combinations = boards.map((value) => {
       if (value.status === "empty") {
@@ -286,8 +283,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
       return value !== null;
     });
 
-    const drawtimes = get().selectedDrawTime;
-
+    const drawtimes = get().selectedDrawTime.sort();
     const user = await supabase.auth.getUser();
 
     drawtimes.map(async (drawtime, index) => {
@@ -316,30 +312,39 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
 
       if (!error) {
         // needed for quick ticket generation
-        tickets.push({
+        const data = {
           ...prepData,
           dateTimePurchased: dayjs().format("YYYY-MM-DD HH:mm:ss A"),
           drawDate: dayjs().format("YYYY-MM-DD"), // can be a custom range later
-        });
-
-        set(() => ({ tickets: [...tickets] }));
-
-        const lockedInBoard = get().lockedInBoards;
-
-        const newLockedIn: TLockedInBoard = {
-          board: boards,
-          drawTime: get().selectedDrawTime,
-          timestamp: dayjs().format("MMM DD, YYYY h:m:s A"),
         };
 
-        lockedInBoard.push(newLockedIn);
+        if (drawtime === DrawTimes.ten) {
+          ticketList[0] = drawtime === DrawTimes.ten ? data : null;
+        }
+
+        if (drawtime === DrawTimes.two) {
+          ticketList[1] = drawtime === DrawTimes.two ? data : null;
+        }
+
+        if (drawtime === DrawTimes.five) {
+          ticketList[2] = drawtime === DrawTimes.five ? data : null;
+        }
+
+        if (drawtime === DrawTimes.nine) {
+          ticketList[3] = drawtime === DrawTimes.nine ? data : null;
+        }
+
         get().getTotal();
-        set(() => ({ lockedInBoards: [...lockedInBoard] }));
+
         if (index === 0) {
           get().handleWalletBetDeduction(amount);
         }
       }
     });
+
+    set(() => ({ tickets: ticketList }));
+    get().setSelectedDrawTime([]);
+    get().getDrawTime();
     set(() => ({ loading: false }));
   },
   clearBoard: async (board?: TBoard | undefined) => {
@@ -445,7 +450,6 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
   },
   handleResetBoard: () => {
     set(() => ({ boards: [...emptyBoard] }));
-    set(() => ({ selectedDrawTime: [] }));
   },
   getTotal: () => {
     const currentBoard = get().boards;
@@ -565,5 +569,57 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
   },
   setIsOpenBet: (value: boolean) => {
     set(() => ({ isOpenBet: value }));
+  },
+  setCurrentDrawTime: (time: string) => {
+    set(() => ({ currentDrawTime: time }));
+  },
+  getDrawTime: async () => {
+    const prevState = get().selectedDrawTime;
+    const currentTime = dayjs();
+    const tenAm = currentTime
+      .set("hour", 10)
+      .set("minute", 0)
+      .set("second", 0)
+      .set("millisecond", 0);
+    const twoPm = currentTime
+      .set("hour", 14)
+      .set("minute", 0)
+      .set("second", 0)
+      .set("millisecond", 0);
+    const fivePm = currentTime
+      .set("hour", 17)
+      .set("minute", 0)
+      .set("second", 0)
+      .set("millisecond", 0);
+    const ninePm = currentTime
+      .set("hour", 21)
+      .set("minute", 0)
+      .set("second", 0)
+      .set("millisecond", 0);
+
+    if (currentTime.isBefore(tenAm)) {
+      get().setCurrentDrawTime(DrawTimes.ten);
+      if (!prevState.includes(DrawTimes.ten)) {
+        prevState.push(DrawTimes.ten);
+      }
+    } else if (currentTime.isBefore(twoPm)) {
+      get().setCurrentDrawTime(DrawTimes.two);
+      if (!prevState.includes(DrawTimes.two)) {
+        prevState.push(DrawTimes.two);
+      }
+    } else if (currentTime.isBefore(fivePm)) {
+      get().setCurrentDrawTime(DrawTimes.five);
+      if (!prevState.includes(DrawTimes.five)) {
+        prevState.push(DrawTimes.five);
+      }
+    } else if (currentTime.isBefore(ninePm)) {
+      get().setCurrentDrawTime(DrawTimes.nine);
+      if (!prevState.includes(DrawTimes.nine)) {
+        prevState.push(DrawTimes.nine);
+      }
+    } else {
+      get().setCurrentDrawTime("");
+    }
+    get().getTotal();
   },
 }));

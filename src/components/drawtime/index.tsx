@@ -1,18 +1,9 @@
 import { View, Text, TouchableOpacity, Alert } from 'react-native'
-import React, { FC } from 'react'
+import React, { FC, useEffect } from 'react'
 import { heightScale, moderateWs, widthScale } from '../../helpers/scaler'
 import { useGameStore } from '../../zustand/game'
-import { s } from 'react-native-size-matters'
-import { useTheme } from 'react-native-paper'
 import dayjs from 'dayjs'
-import { MaterialCommunityIcons } from '@expo/vector-icons'
-
-enum DrawTimes {
-    ten = '10:00',
-    two = '2:00',
-    five = '5:00',
-    nine = '9:00'
-}
+import { DrawTimes } from '../../constants/App';
 
 type ButtonGroupProps = {
     time: string,
@@ -25,9 +16,11 @@ type ButtonGroupProps = {
 const ButtonGroup: FC<ButtonGroupProps> = ({ time, indicators, selected, isDisabled = true, isOpenBet = false }) => {
 
     const selectedDrawTime = useGameStore((state) => state.selectedDrawTime);
-    const { setSelectedDrawTime, getTotal } = useGameStore();
+    const currentDrawTime = useGameStore((state) => state.currentDrawTime);
+    const { setSelectedDrawTime, getTotal, setCurrentDrawTime, getDrawTime } = useGameStore();
 
     const handleSelected = (time: string) => {
+
         if (!isOpenBet) {
             Alert.alert('Betting is closed', "Betting is closed, please try again later.", [{ text: 'OK' }]);
             return;
@@ -39,16 +32,22 @@ const ButtonGroup: FC<ButtonGroupProps> = ({ time, indicators, selected, isDisab
         }
 
         let prevState = [...selectedDrawTime];
-
         if (prevState.includes(time)) {
             const updatedState = prevState.filter((item) => item !== time);
             setSelectedDrawTime(updatedState)
+            setCurrentDrawTime("");
         } else {
-            setSelectedDrawTime([...prevState, time])
+            setSelectedDrawTime([...prevState, time].sort())
         }
 
         getTotal();
     }
+
+    const isActive = (selected && isOpenBet) || currentDrawTime === time;
+
+    useEffect(() => {
+        getDrawTime()
+    }, [])
 
     return <TouchableOpacity onPress={() => handleSelected(time)} style={{ justifyContent: 'center', alignItems: 'center' }}>
         <View
@@ -58,16 +57,16 @@ const ButtonGroup: FC<ButtonGroupProps> = ({ time, indicators, selected, isDisab
                 margin: widthScale(10),
                 justifyContent: 'center',
                 alignItems: 'center',
-                borderWidth: selected && isOpenBet ? 3 : 1,
                 padding: widthScale(5),
-                backgroundColor: selected && isOpenBet ? 'blue' : 'white',
-                borderColor: selected && isOpenBet ? 'gold' : 'gray',
+                backgroundColor: isActive ? 'blue' : 'white',
+                borderColor: isActive ? 'gold' : 'gray',
+                borderWidth: isActive ? 3 : 1,
                 borderRadius: widthScale(5),
                 position: 'relative'
             }}>
             <View style={{ position: 'absolute' }}>
-                <Text style={{ fontSize: moderateWs(12, 1), textAlign: 'center', fontWeight: 'bold', color: selected && isOpenBet ? 'white' : !isDisabled ? 'gray' : 'black' }}>{time}</Text>
-                <Text style={{ fontSize: moderateWs(12, 1), textAlign: 'center', color: selected && isOpenBet ? 'white' : !isDisabled ? 'gray' : 'black' }}>{indicators}</Text>
+                <Text style={{ fontSize: moderateWs(12, 1), textAlign: 'center', fontWeight: 'bold', color: isActive ? 'white' : !isDisabled ? 'gray' : 'black' }}>{time}</Text>
+                <Text style={{ fontSize: moderateWs(12, 1), textAlign: 'center', color: isActive ? 'white' : !isDisabled ? 'gray' : 'black' }}>{indicators}</Text>
             </View>
         </View>
     </TouchableOpacity>
