@@ -40,6 +40,7 @@ type TState = {
   totalWin: number;
   winCombination: string;
   isOpenBet: boolean;
+  winningTickets: string[];
 };
 
 type TActions = {
@@ -135,6 +136,7 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
   isOpenBet: false,
   totalWin: 0,
   winCombination: "",
+  winningTickets: [],
   currentDrawTime: "",
   boards: [
     {
@@ -497,12 +499,16 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
       .eq("userid", user.data.user?.id);
 
     if (!error && data.length > 0) {
+      let winTicketIds: number[] = [];
+      let winningTickets: string[] = [];
       const ticketIds = data.map((obj) => obj.id);
 
       const forComputationData = data.map((obj) => {
         const combination = JSON.parse(obj.combinations);
         return combination.map((value: any) => {
           return {
+            id: obj.id,
+            serial: obj.serial,
             combinations: value.combinations,
             bet: value.bet,
             drawCount: obj.drawCount,
@@ -530,6 +536,8 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
           // check if the ticket won
           if (monthDate === monthDateCombination) {
             if (explodedLetters.includes(letter)) {
+              winTicketIds.push(value.id);
+              winningTickets.push(value.serial);
               const computedWin = (bet * prizeMoney) / explodedLetters.length;
               return computedWin;
             }
@@ -554,11 +562,17 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
         set(() => ({ isWin: true }));
         set(() => ({ totalBet: 0 }));
         set(() => ({ winCombination: result.result }));
+        set(() => ({ winningTickets: winningTickets }));
 
         await supabase
           .from("tickets")
           .update({ status: "inactive" })
           .in("id", ticketIds);
+
+        await supabase
+          .from("tickets")
+          .update({ status: "won" })
+          .in("id", winTicketIds);
       }
 
       set(() => ({ lockedInBoards: [] }));

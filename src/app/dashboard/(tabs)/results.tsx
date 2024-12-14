@@ -6,13 +6,16 @@ import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { heightScale, moderateWs, widthScale } from '../../../helpers/scaler';
-import { useGameStore } from '../../../zustand/game';
+import { TTicket } from '../../../types/game';
+import { prizeMoney } from '../../../constants/App';
+import CongratsDialog2 from '../../../components/congratsdialog2';
+import { useWalletStore } from '../../../zustand/wallet';
 
 type TResult = {
     id: number;
     result: string;
     drawtime: string;
-    create_at: string;
+    created_at: string;
 };
 
 
@@ -26,10 +29,14 @@ export default function results() {
     const [start, setStart] = useState<number>(0);
     const [end, setEnd] = useState<number>(9);
     const [resultsCount, setResultsCount] = useState<number>(0);
+    const [isWin, setIsWin] = useState<boolean>(false);
+    const [winCombination, setWinCombination] = useState<string[]>([]);
+    const [winTickets, setWinTickets] = useState<string[]>([]);
+    const [totalWin, setTotalWin] = useState<number>(0);
+    const { deposit } = useWalletStore();
     const dimensions = useWindowDimensions();
     const theme = useTheme();
 
-    const { checkWin } = useGameStore();
 
     const getResultsCount = async () => {
         try {
@@ -118,17 +125,138 @@ export default function results() {
         }
     }
 
+    const getWinningTickets = async (comb: string, ticket: TTicket) => {
+        const createdAt = dayjs(ticket.created_at);
+        const startOfDay = createdAt.startOf('day').toISOString();
+        const endOfDay = createdAt.endOf('day').toISOString();
+
+        const { data, error } = await supabase
+            .from('drawresult').select('*')
+            .eq('result', comb)
+            .eq('drawtime', ticket.drawTime)
+            .gte('created_at', startOfDay)
+            .lte('created_at', endOfDay);
+
+        if (error) {
+            throw error;
+        }
+
+        if (data.length > 0) {
+            return ticket;
+        }
+    }
+
+    const processCombinationAndBet = async (combinations: any, bet: string, ticket: TTicket) => {
+        try {
+            let actualCombination: string[] = [];
+            const actualBet = bet;
+            const explodedCombination = combinations.split('-');
+            const monthCombi = explodedCombination[0];
+            const dayCombi = explodedCombination[1];
+            const letters = explodedCombination[2];
+
+            const explodedLetters = letters.split(',');
+
+            explodedLetters.forEach(async (letter: any) => {
+                actualCombination.push(`${monthCombi}-${dayCombi}-${letter}`);
+            });
+
+            const letterLength = explodedLetters.length;
+
+            const result = await Promise.all(actualCombination.map(async (comb) => {
+                const winningTicket = await getWinningTickets(comb, ticket);
+                return { comb, actualBet, letterLength, winningTicket };
+            }));
+
+            return result;
+        } catch (error: any) {
+            Alert.alert('Error', error.message, [{ text: 'OK' }]);
+        }
+    }
+
+    function filterWinningTickets(data: any[]): any[] {
+        return data
+            .filter(item => {
+                // Check if the item is an object with a winningTicket property
+                if (Array.isArray(item)) {
+                    // Recursively filter nested arrays
+                    return filterWinningTickets(item).length > 0;
+                }
+                return item.winningTicket !== undefined;
+            })
+            .map(item => (Array.isArray(item) ? filterWinningTickets(item) : item));
+    }
+
     const checkResult = async () => {
         try {
             setChecking(true);
-            const { data, error } = await supabase.from('drawresult').select().order('id', { ascending: false }).limit(1);
+            const user = await supabase.auth.getUser();
+            const { data, error } = await supabase
+                .from('tickets')
+                .select('*')
+                .eq('userid', user?.data.user?.id)
+                .eq('status', 'active')
+                .order('created_at', { ascending: false })
+                ;
 
             if (error) {
                 throw error;
             }
 
-            const result = data[0];
-            checkWin(result);
+            const tickets = data ?? [] as TTicket[];
+
+            const result = await Promise.all(tickets.map(async (ticket) => {
+                const combinations = JSON.parse(ticket.combinations);
+                return await Promise.all(combinations.map(async (comb: any) => {
+                    return await processCombinationAndBet(comb.combinations, comb.bet, ticket);
+                }));
+            }));
+
+            const filteredData = filterWinningTickets(result).flat(Infinity);
+
+            if (filteredData.length > 0) {
+                let totalWin = 0;
+                let winTickets: string[] = [];
+                let winCombination: string[] = [];
+
+                Promise.all(filteredData.map(async (item: any) => {
+                    const { comb, actualBet, letterLength, winningTicket } = item;
+                    const { error } = await supabase
+                        .from('tickets')
+                        .update({ status: 'won' })
+                        .eq('userid', user?.data.user?.id)
+                        .eq('status', 'active')
+                        .eq('id', winningTicket.id);
+
+                    if (error) {
+                        throw error;
+                    }
+
+                    totalWin += (parseFloat(actualBet) * prizeMoney) / letterLength;
+                    winTickets.push(winningTicket.serial);
+                    if (!winCombination.includes(comb)) {
+                        winCombination.push(comb);
+                    }
+                }));
+
+
+                const { error } = await supabase
+                    .from('tickets')
+                    .update({ status: 'inactive' })
+                    .eq('userid', user?.data.user?.id)
+                    .neq('status', 'won');
+
+                if (error) {
+                    throw error;
+                }
+
+                deposit(totalWin, 'Deposit winnings');
+                setTotalWin(totalWin);
+                setWinTickets(winTickets);
+                setWinCombination(winCombination);
+                setIsWin(true);
+            }
+
         } catch (error: any) {
             Alert.alert('Error', error.message, [{ text: 'OK' }]);
         } finally {
@@ -154,6 +282,14 @@ export default function results() {
                 justifyContent: 'flex-start',
             }}
         >
+            {isWin && <CongratsDialog2
+                visible={isWin}
+                onDismiss={() => setIsWin(false)}
+                totalWin={totalWin}
+                winCombination={winCombination}
+                winTickets={winTickets}
+            />
+            }
             {!loading &&
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', marginTop: widthScale(60), marginLeft: widthScale(10) }}>
                     <View style={{ flex: 1 }}>
@@ -255,7 +391,7 @@ export default function results() {
                                 <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                                         <MaterialCommunityIcons name='calendar' size={widthScale(12)} style={{ marginRight: widthScale(2), marginBottom: heightScale(5) }} />
-                                        <Text style={{ fontSize: moderateWs(12, 1), marginBottom: heightScale(5) }}>Date: {dayjs(item.create_at).format('MMM DD, YYYY')}</Text>
+                                        <Text style={{ fontSize: moderateWs(12, 1), marginBottom: heightScale(5) }}>Date: {dayjs(item.created_at).format('MMM DD, YYYY')}</Text>
                                     </View>
                                     <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                                         <MaterialCommunityIcons name='clock-outline' size={widthScale(12)} style={{ marginRight: widthScale(2), marginBottom: heightScale(5) }} />

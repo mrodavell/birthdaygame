@@ -2,7 +2,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import dayjs from "dayjs";
 import { create } from "zustand";
 import { supabase } from "../lib/supabase";
-import { Alert } from "react-native";
 
 type TTransactions = {
   type: string;

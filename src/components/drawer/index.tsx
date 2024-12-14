@@ -63,6 +63,13 @@ export default function DrawerContent(props: any) {
                     />
                     <Text style={{ marginTop: 15 }}>+{phone}</Text>
                 </View>
+                <DrawerItem
+                    label="Home"
+                    icon={({ color, size }) => (
+                        <MaterialCommunityIcons name='home-outline' color={color} size={size} />
+                    )}
+                    onPress={() => router.push('/dashboard/(tabs)/home')}
+                />
                 <DrawerItemList {...props} />
                 <DrawerItem
                     label="Logout"

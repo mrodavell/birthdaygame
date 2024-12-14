@@ -2,16 +2,30 @@ import { View, SafeAreaView, ScrollView, useWindowDimensions, Alert } from 'reac
 import { Button, Text } from 'react-native-paper'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import dayjs from 'dayjs';
-import { useRef } from 'react';
-import QRCodeTicket from '../components/qrcodeticket';
-import { useUserStore } from '../zustand/user';
-import { TBoard } from '../types/game';
+import { FC, useRef } from 'react';
+import QRCodeTicket from '../../components/qrcodeticket';
+import { useUserStore } from '../../zustand/user';
+import { TBoard } from '../../types/game';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { moderateWs, widthScale } from '../helpers/scaler';
+import { moderateWs, widthScale } from '../../helpers/scaler';
 
-const TicketDetails = () => {
-    const router = useRouter();
-    const { boards, drawNumber, created_at, serial, drawTime } = useLocalSearchParams();
+type TTicketDetailsProps = {
+    boards: string;
+    drawNumber: string;
+    created_at: string;
+    serial: string;
+    drawTime: string;
+    handleTicket: () => void;
+}
+
+const TicketDetails: FC<TTicketDetailsProps> = ({
+    boards,
+    drawNumber,
+    created_at,
+    serial,
+    drawTime,
+    handleTicket
+}) => {
     const { bottom } = useSafeAreaInsets();
     const phone = useUserStore((state) => state.phone);
     const dimensions = useWindowDimensions();
@@ -28,7 +42,7 @@ const TicketDetails = () => {
     }, 0)
 
     const handleGoback = () => {
-        router.navigate('/dashboard/(tabs)/etickets', { relativeToDirectory: true });
+        handleTicket && handleTicket();
     }
 
     return (
@@ -90,14 +104,13 @@ const TicketDetails = () => {
                                 </View>
                             </View>
                         </View>
-                        <View style={{ flexGrow: 1, justifyContent: 'center', flexDirection: 'row', marginTop: widthScale(30) }}>
+                        <View style={{ flexGrow: 1, justifyContent: 'center', marginTop: widthScale(30) }}>
                             <Text style={{ fontSize: moderateWs(12, 1), fontWeight: 'bold' }}>
                                 <Text>
                                     Date & Time Purchased:
                                 </Text>
-                                {' '}
-                                <Text>
-                                    {dayjs().format("MMM-DD-YYYY - h:mm A")}
+                                <Text style={{ marginLeft: widthScale(5) }}>
+                                    {dayjs().format("MMM-DD-YYYY - h:m A")}
                                 </Text>
                             </Text>
                         </View>

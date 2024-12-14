@@ -7,6 +7,8 @@ import 'react-native-gesture-handler';
 import { Alert, Share, View, Image } from 'react-native';
 import { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { heightScale, moderateWs, widthScale } from '../../helpers/scaler';
+import React from 'react';
+import { router, useNavigation } from 'expo-router';
 
 const DashboardLayout = () => {
 
@@ -71,12 +73,24 @@ const DashboardLayout = () => {
                     ),
                 }}
             >
-                <Drawer.Screen name='(tabs)' options={{
-                    drawerLabel: "Home",
-                    drawerIcon: ({ color, size }) => (
-                        <MaterialCommunityIcons name='home-outline' color={color} size={size} />
-                    )
-                }} />
+
+                <Drawer.Screen
+                    name='(tabs)'
+                    options={{
+                        drawerLabel: "Home",
+                        drawerIcon: ({ color, size }) => (
+                            <MaterialCommunityIcons name='home-outline' color={color} size={size} />
+                        ),
+                        drawerItemStyle: { height: 0 }
+                    }}
+                    listeners={({ navigation }) => ({
+                        drawerItemPress: () => {
+                            alert('Home');
+                            return navigation.navigate('(tabs)', { screen: 'home' });
+                        }
+                    })}
+                />
+
                 <Drawer.Screen name='calculator' options={{
                     drawerLabel: "Prize Calculator",
                     drawerIcon: ({ color, size }) => (

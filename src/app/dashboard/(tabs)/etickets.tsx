@@ -55,14 +55,38 @@ export default function eticket() {
             const { data, error } = await supabase
                 .from('tickets').select('*')
                 .eq('userid', user.data.user?.id)
-                .order('id', { ascending: false })
+                .order('created_at', { ascending: false })
                 .range(0, 9);
 
             if (error) {
                 throw error;
             }
 
-            setTickets(data ?? []);
+            const groupedData: Record<string, TTicket[]> = data.reduce((acc, curr) => {
+                // Create a date object and format it to YYYY-MM-DD to exclude the time portion
+                const date = curr.drawNumber.split('-')[0];
+
+                if (!acc[date]) {
+                    acc[date] = []; // Initialize an empty array if it doesn't exist yet
+                }
+                acc[date].push(curr); // Push the current object into the corresponding date group
+                return acc;
+            }, {});
+
+
+            const drawTimeOrder = ['10:00', '2:00', '5:00', '9:00'];
+
+            for (const date in groupedData) {
+                groupedData[date].sort((a: any, b: any) => {
+                    return drawTimeOrder.indexOf(a.drawTime) - drawTimeOrder.indexOf(b.drawTime);
+                });
+            }
+
+            const flattenedData: TTicket[] = Object.entries(groupedData)
+                .sort(([keyA], [keyB]) => keyB.localeCompare(keyA))
+                .flatMap(([, tickets]) => tickets);
+
+            setTickets(flattenedData ?? []);
         } catch (error: any) {
             Alert.alert('Error', error.message, [{ text: 'OK' }]);
         } finally {
@@ -179,7 +203,10 @@ export default function eticket() {
                                 onPress={() => handleNavigation(item)}
                             >
                                 <View>
-                                    <Text style={{ fontSize: moderateWs(12, 1), marginBottom: 5 }}>Date & Time Purchased: {dayjs(item.created_at).format('MMM-DD-YYYY - h:m A')}</Text>
+                                    <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', borderWidth: 1, borderColor: 'transparent' }}>
+                                        <Text style={{ fontSize: moderateWs(12, 1), marginBottom: 5 }}>Date Purchased: {dayjs(item.created_at).format('MMM-DD-YYYY')}</Text>
+                                        <Text style={{ fontSize: moderateWs(12, 1), marginBottom: 5 }}>Draw Time: {item.drawTime}</Text>
+                                    </View>
                                     <List.Item
                                         style={{ padding: 10, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84, elevation: 5, backgroundColor: theme.colors.surface, borderRadius: 5 }}
                                         title={`Serial No.: ${item.serial}`}

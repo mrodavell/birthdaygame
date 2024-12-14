@@ -18,8 +18,7 @@ import { heightScale, moderateWs, widthScale } from '../../../helpers/scaler';
 import DrawTime from '../../../components/drawtime';
 import { supabase } from '../../../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useDebounce } from 'use-debounce';
-
+import { formatToPHP } from '../../../helpers/format';
 export default function Home() {
 
     const theme = useTheme()
@@ -326,7 +325,7 @@ export default function Home() {
                             </View>
                         }
                         {!fetchingWallet &&
-                            <Text style={{ fontSize: moderateWs(20, 1), fontWeight: 'bold' }}>P {parseFloat(wallet.toString()).toFixed(2)}</Text>
+                            <Text style={{ fontSize: moderateWs(20, 1), fontWeight: 'bold' }}>{formatToPHP(wallet.toString())}</Text>
                         }
                     </View>
                     <View style={{ flex: 2, justifyContent: 'center' }}>
