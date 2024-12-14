@@ -25,7 +25,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.abcdgame.app"
+      "package": "com.birthdaygame.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
