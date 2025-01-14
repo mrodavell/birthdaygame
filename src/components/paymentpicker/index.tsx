@@ -1,6 +1,6 @@
 import { View, FlatList, TouchableOpacity } from 'react-native'
 import React, { FC, useState } from 'react'
-import { Button, Text, useTheme } from 'react-native-paper'
+import { Text, useTheme } from 'react-native-paper'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { heightScale, moderateWs, widthScale } from '../../helpers/scaler'
 
@@ -40,7 +40,7 @@ const PaymentPicker: FC<TPaymentPickerProps> = ({ handlePick }) => {
                             borderWidth: 1,
                             borderRadius: widthScale(5),
                             margin: 5,
-                            minWidth: widthScale(150),
+                            minWidth: widthScale(120),
                             minHeight: heightScale(50)
                         }}
                     >

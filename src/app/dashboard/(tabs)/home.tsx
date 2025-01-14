@@ -1,11 +1,9 @@
-import { Alert, BackHandler, ScrollView, useWindowDimensions, View } from 'react-native';
-import React, { Fragment, useEffect, useRef, useState } from 'react';
+import { Alert, BackHandler, ScrollView, useWindowDimensions, View, Keyboard } from 'react-native';
+import React, { Fragment, useEffect, useState } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import dayjs from 'dayjs';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ActivityIndicator, Button, Card, Divider, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
-import AppBottomSheet from '../../../components/bottomsheet';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { ActivityIndicator, Button, Card, IconButton, Modal, Text, TextInput, useTheme } from 'react-native-paper';
 import AmountPicker from '../../../components/amountpicker';
 import PaymentPicker from '../../../components/paymentpicker';
 import Indicator from '../../../components/indicator';
@@ -19,6 +17,7 @@ import DrawTime from '../../../components/drawtime';
 import { supabase } from '../../../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatToPHP } from '../../../helpers/format';
+
 export default function Home() {
 
     const theme = useTheme()
@@ -32,9 +31,6 @@ export default function Home() {
     const [loading, setLoading] = useState<boolean>(false);
     const [fetching, setFetching] = useState<boolean>(false);
     const toggleIndicator = () => setLoading(prev => !prev)
-    const depositRef = useRef<BottomSheetModal>(null);
-    const withdrawRef = useRef<BottomSheetModal>(null);
-    const paymentApiRef = useRef<BottomSheetModal>(null);
     const wallet = useWalletStore((state) => state.wallet) ?? "0.00";
     const boards = useGameStore((state) => state.boards);
     const totalBet = useGameStore((state) => state.totalBet);
@@ -43,6 +39,13 @@ export default function Home() {
     const { deposit, withdraw, fetchWallet } = useWalletStore();
     const { lockedIn, handleResetBoard, setIsOpenBet } = useGameStore();
     const fetchingWallet = useWalletStore((state) => state.fetching);
+    const [depositModal, setDepositModal] = useState<boolean>(false);
+    const toggleDepositModal = () => setDepositModal(prev => !prev);
+    const [withdrawModal, setWithdrawModal] = useState<boolean>(false);
+    const toggleWithdrawModal = () => setWithdrawModal(prev => !prev);
+    const [paymentOptionModal, setPaymentOptionModal] = useState<boolean>(false);
+    const togglePaymentOptionModal = () => setPaymentOptionModal(prev => !prev);
+
     const handleOpenBet = async (payload: any) => {
         await AsyncStorage.setItem('is_open_betting', payload.new.is_open_betting?.toString() ?? "false");
         setIsOpenBet(payload.new.is_open_betting ?? false)
@@ -54,16 +57,6 @@ export default function Home() {
         .subscribe()
 
     const handleWithdrawAmountSelect = (amount: string) => {
-
-        if (isNaN(parseInt(amount))) {
-            return;
-        }
-
-        if (withdrawAmount === "") {
-            setWithdrawAmount("0");
-            return;
-        }
-
         const myWallet = wallet ?? "0";
 
         if (parseInt(myWallet) < parseInt(amount)) {
@@ -75,15 +68,6 @@ export default function Home() {
     }
 
     const handleDepositAmountSelect = (amount: string) => {
-        if (isNaN(parseInt(amount))) {
-            return;
-        }
-
-        if (depositAmount === "") {
-            setDepositAmount("0");
-            return;
-        }
-
         setDepositAmount(amount);
     }
 
@@ -95,55 +79,47 @@ export default function Home() {
         setMethod(method);
     }
 
-    const handleWithdrawBottomSheet = () => {
-        setAction("withdraw");
-        depositRef.current?.close();
-        withdrawRef.current?.present();
-    }
-
-    const handleDepositBottomSheet = () => {
-        setAction("deposit");
-        withdrawRef.current?.close();
-        depositRef.current?.present()
-    }
-
     const handlePaymentOptions = () => {
 
-        if (action === "deposit" && depositAmount === "0" && parseInt(depositAmount) === 0) {
-            handleAlerts("Please specify amount to deposit")
-            return;
+        if (action === "deposit") {
+            if (depositAmount === "" || parseInt(depositAmount) === 0) {
+                handleAlerts("Please specify amount to deposit")
+                return;
+            }
         }
 
-        if (action === "withdraw" && withdrawAmount === "0" && parseInt(withdrawAmount) === 0) {
-            handleAlerts("Please specify amount to withdraw")
-            return;
+        if (action === "withdraw") {
+            if (parseInt(wallet) < parseInt(withdrawAmount)) {
+                handleAlerts("Insufficient Wallet Balance")
+                return;
+            }
+
+            if (withdrawAmount === "0" || parseInt(withdrawAmount) === 0) {
+                handleAlerts("Please specify amount to withdraw")
+                return;
+            }
         }
 
-        if (action === "withdraw" && parseInt(wallet) < parseInt(withdrawAmount)) {
-            handleAlerts("Insufficient Wallet Balance")
-            return;
-        }
-
-
-        withdrawRef.current?.close();
-        depositRef.current?.close();
-        paymentApiRef.current?.present();
+        Keyboard.dismiss();
+        setPaymentOptionModal(true);
     }
 
     const handleCancelAction = () => {
         setDepositAmount("0");
         setWithdrawAmount("0");
-        withdrawRef.current?.close();
-        depositRef.current?.close();
-        paymentApiRef.current?.close();
+        setMethod("");
+        setDepositModal(false);
+        setWithdrawModal(false);
+        setPaymentOptionModal(false);
     }
 
     const handleBack = () => {
-        paymentApiRef.current?.close();
+        togglePaymentOptionModal();
+        setMethod("");
         if (action === "deposit") {
-            depositRef.current?.present()
+            setDepositModal(true);
         } else {
-            withdrawRef.current?.present();
+            setWithdrawModal(true);
         }
     }
 
@@ -182,7 +158,9 @@ export default function Home() {
                 Alert.alert("Withdrawal Successful", `You have successfully withdrawn P${amount}`, [{ text: 'OK' }]);
             }
 
-            paymentApiRef.current?.close();
+            setDepositModal(false);
+            setWithdrawModal(false);
+            setPaymentOptionModal(false);
 
         } catch (error: any) {
             Alert.alert(`Error on ${action === 'withdraw' ? 'withdraw' : 'deposit'} transaction`, error.message, [{ text: 'OK' }]);
@@ -339,12 +317,29 @@ export default function Home() {
                 </View>
             </Card>
             <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', gap: heightScale(8), marginBottom: heightScale(10), marginTop: heightScale(10) }}>
-                <Button mode='contained' style={{ flex: 1, backgroundColor: theme.colors.tertiary }} contentStyle={{ height: widthScale(38), alignItems: 'center', justifyContent: 'center' }} onPress={handleDepositBottomSheet}>
+                <Button
+                    mode='contained'
+                    style={{ flex: 1, backgroundColor: theme.colors.tertiary }}
+                    contentStyle={{ height: widthScale(38), alignItems: 'center', justifyContent: 'center' }}
+                    // onPress={handleDepositBottomSheet}
+                    onPress={() => {
+                        setAction("deposit");
+                        toggleDepositModal();
+                    }}
+                >
                     <Text style={{ color: 'white', fontSize: moderateWs(12, 1) }}>
                         DEPOSIT
                     </Text>
                 </Button>
-                <Button mode='contained' style={{ flex: 1, backgroundColor: 'blue' }} contentStyle={{ height: widthScale(38), alignItems: 'center', justifyContent: 'center' }} onPress={handleWithdrawBottomSheet}>
+                <Button
+                    mode='contained'
+                    style={{ flex: 1, backgroundColor: 'blue' }}
+                    contentStyle={{ height: widthScale(38), alignItems: 'center', justifyContent: 'center' }}
+                    onPress={() => {
+                        setAction("withdraw");
+                        toggleWithdrawModal();
+                    }}
+                >
                     <Text style={{ color: 'white', fontSize: moderateWs(12, 1) }}>
                         WITHDRAW
                     </Text>
@@ -393,77 +388,135 @@ export default function Home() {
                 </View>
 
             </View>
-            <AppBottomSheet ref={depositRef}>
-                <View style={{ padding: widthScale(10) }}>
-                    <View style={{ alignItems: 'center', marginVertical: heightScale(8) }}>
-                        <Text variant='titleLarge' style={{ fontSize: moderateWs(18, 1) }}>Deposit</Text>
-                    </View>
-                    <View style={{ marginHorizontal: widthScale(20) }}>
-                        <AmountPicker amount={depositAmount} handlePick={handleDepositAmountSelect} />
-                        <TextInput
-                            value={depositAmount}
-                            onChangeText={(text) => setDepositAmount(text)}
-                            onFocus={handleFocus}
-                            keyboardType='numeric'
-                            mode='outlined'
-                            placeholder='Enter Amount'
-                            style={{ marginVertical: heightScale(20), height: heightScale(50) }}
-                            contentStyle={{ textAlign: 'center' }}
-                        />
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: widthScale(4) }}>
-                            <Button mode='contained' onPress={handleCancelAction} buttonColor={theme.colors.tertiary}>Cancel</Button>
-                            <Button mode='contained' onPress={handlePaymentOptions}>Next</Button>
+            {depositModal &&
+                <Modal onDismiss={toggleDepositModal} visible={depositModal}>
+                    <View style={{
+                        padding: widthScale(10),
+                        paddingVertical: widthScale(20),
+                        backgroundColor: theme.colors.surface,
+                        margin: widthScale(10),
+                        borderRadius: widthScale(8)
+                    }}>
+                        <View style={{ alignItems: 'center', marginVertical: heightScale(8), flexDirection: 'row', justifyContent: 'center' }}>
+                            <MaterialCommunityIcons name='wallet' size={moderateWs(20, 1)} style={{ marginRight: 10 }} />
+                            <Text variant='titleLarge' style={{ fontSize: moderateWs(18, 1) }}>DEPOSIT</Text>
+                        </View>
+                        <View style={{ marginHorizontal: widthScale(20) }}>
+                            <AmountPicker amount={depositAmount} handlePick={handleDepositAmountSelect} />
+                            <TextInput
+                                value={depositAmount}
+                                onChangeText={(text) => setDepositAmount(text)}
+                                onFocus={handleFocus}
+                                keyboardType='numeric'
+                                mode='outlined'
+                                placeholder='Enter Amount'
+                                style={{ marginVertical: heightScale(20), height: heightScale(40) }}
+                                contentStyle={{ textAlign: 'center' }}
+                            />
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: widthScale(4) }}>
+                                <Button
+                                    mode='contained'
+                                    onPress={handleCancelAction}
+                                    contentStyle={{ minWidth: widthScale(80) }}
+                                    buttonColor={theme.colors.tertiary}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button mode='contained' onPress={handlePaymentOptions} contentStyle={{ minWidth: widthScale(80) }}>Next</Button>
+                            </View>
                         </View>
                     </View>
-                </View>
-            </AppBottomSheet>
-            <AppBottomSheet ref={withdrawRef}>
-                <View style={{ padding: widthScale(10) }}>
-                    <View style={{ alignItems: 'center', marginVertical: 8 }}>
-                        <Text variant='titleLarge' style={{ fontSize: moderateWs(18, 1) }}>Withdraw</Text>
-                    </View>
-                    <View style={{ marginHorizontal: widthScale(20) }}>
-                        <AmountPicker amount={withdrawAmount} handlePick={handleWithdrawAmountSelect} />
-                        <TextInput
-                            value={withdrawAmount}
-                            onChangeText={(text: string) => setWithdrawAmount(text)}
-                            onFocus={handleFocus}
-                            keyboardType='numeric'
-                            mode='outlined'
-                            placeholder='Enter Amount'
-                            style={{ marginVertical: heightScale(20), height: heightScale(50) }}
-                            contentStyle={{ textAlign: 'center' }}
-                        />
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: widthScale(4) }}>
-                            <Button mode='contained' onPress={handleCancelAction} buttonColor={theme.colors.tertiary}>Cancel</Button>
-                            <Button mode='contained' onPress={handlePaymentOptions}>Next</Button>
+                </Modal>
+            }
+            {withdrawModal &&
+                <Modal onDismiss={toggleWithdrawModal} visible={withdrawModal}>
+                    <View style={{
+                        padding: widthScale(10),
+                        paddingVertical: widthScale(20),
+                        backgroundColor: theme.colors.surface,
+                        margin: widthScale(10),
+                        borderRadius: widthScale(8)
+                    }}>
+                        <View style={{ alignItems: 'center', marginVertical: heightScale(8), flexDirection: 'row', justifyContent: 'center' }}>
+                            <MaterialCommunityIcons name='wallet' size={moderateWs(20, 1)} style={{ marginRight: 10 }} />
+                            <Text variant='titleLarge' style={{ fontSize: moderateWs(18, 1) }}>WITHDRAW</Text>
+                        </View>
+                        <View style={{ marginHorizontal: widthScale(20) }}>
+                            <AmountPicker amount={withdrawAmount} handlePick={handleWithdrawAmountSelect} />
+                            <TextInput
+                                value={withdrawAmount}
+                                onChangeText={(text) => setWithdrawAmount(text)}
+                                onFocus={handleFocus}
+                                keyboardType='numeric'
+                                mode='outlined'
+                                placeholder='Enter Amount'
+                                style={{ marginVertical: heightScale(20), height: heightScale(40) }}
+                                contentStyle={{ textAlign: 'center' }}
+                            />
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: widthScale(4) }}>
+                                <Button
+                                    mode='contained'
+                                    onPress={handleCancelAction}
+                                    contentStyle={{ minWidth: widthScale(80) }}
+                                    buttonColor={theme.colors.tertiary}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button mode='contained' onPress={handlePaymentOptions} contentStyle={{ minWidth: widthScale(80) }}>Next</Button>
+                            </View>
                         </View>
                     </View>
-                </View>
-            </AppBottomSheet>
-            <AppBottomSheet ref={paymentApiRef}>
-                <View style={{ padding: widthScale(10) }}>
-                    <View style={{ alignItems: 'center', marginVertical: widthScale(8), flexDirection: 'row', }}>
-                        <IconButton icon="arrow-left" onPress={handleBack} style={{ marginLeft: widthScale(12) }} />
-                        <Text variant='titleMedium' style={{ marginLeft: widthScale(20) }}>Choose Mode of {action === "withdraw" ? "Withdrawal" : "Deposit"}</Text>
-                    </View>
-                    <View style={{ alignItems: 'center', marginBottom: widthScale(10) }}>
-                        <Text style={{ fontSize: moderateWs(18, 1) }}>Amount: P{action === "withdraw" ? withdrawAmount : depositAmount}</Text>
-                        <Divider />
-                    </View>
-                    <View>
-                        <PaymentPicker handlePick={handleMethodSelect} />
-                        <View style={{ flexDirection: 'column', alignItems: 'center' }}>
-                            <Button mode='contained' style={{ height: heightScale(50), justifyContent: 'center' }} labelStyle={{ fontSize: moderateWs(12, 1) }} onPress={handleComplete}>CONFIRM</Button>
+                </Modal>
+            }
+            {paymentOptionModal &&
+                <Modal onDismiss={togglePaymentOptionModal} visible={paymentOptionModal}>
+                    <View style={{
+                        padding: widthScale(10),
+                        paddingVertical: widthScale(20),
+                        backgroundColor: theme.colors.surface,
+                        margin: widthScale(10),
+                        borderRadius: widthScale(8),
+                        minHeight: heightScale(350)
+                    }}>
+                        <View style={{ alignItems: 'center', justifyContent: 'center', marginVertical: widthScale(8), flexDirection: 'row', }}>
+                            <Text variant='titleMedium'>Choose Mode of {action === "withdraw" ? "Withdrawal" : "Deposit"}</Text>
+                        </View>
+                        <View style={{ alignItems: 'center', marginBottom: widthScale(10) }}>
+                            <Text style={{ fontSize: moderateWs(18, 1) }}>
+                                Amount: P {action === "withdraw" ? withdrawAmount : depositAmount}
+                            </Text>
+                        </View>
+                        <View>
+                            <PaymentPicker handlePick={handleMethodSelect} />
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: widthScale(20) }}>
+                                <Button
+                                    mode='contained'
+                                    style={{ height: heightScale(35), justifyContent: 'center', minWidth: widthScale(100) }}
+                                    labelStyle={{ fontSize: moderateWs(12, 1) }}
+                                    onPress={handleBack}
+                                    buttonColor={theme.colors.tertiary}
+                                >
+                                    BACK
+                                </Button>
+                                <Button
+                                    mode='contained'
+                                    style={{ height: heightScale(35), justifyContent: 'center', minWidth: widthScale(100) }}
+                                    labelStyle={{ fontSize: moderateWs(12, 1) }}
+                                    onPress={handleComplete}
+                                >
+                                    CONFIRM
+                                </Button>
+                            </View>
                         </View>
                     </View>
-                </View>
-            </AppBottomSheet>
-            {loading &&
+                </Modal>
+            }
+            {
+                loading &&
                 <Indicator visible={loading} onDismiss={toggleIndicator}>
                     <ActivityIndicator size={widthScale(50)} />
                 </Indicator>
             }
-        </SafeAreaView>
+        </SafeAreaView >
     )
 }

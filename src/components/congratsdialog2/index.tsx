@@ -5,6 +5,7 @@ import { Audio } from 'expo-av';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { heightScale, moderateWs, widthScale } from '../../helpers/scaler';
 import { formatToPHP } from '../../helpers/format';
+import { useResultsStore } from '../../zustand/results';
 
 type TCongratsDialog2Props = {
     visible: boolean,
@@ -85,7 +86,6 @@ const CongratsDialog2: FC<TCongratsDialog2Props> = ({
                             ))
                         }
                     </View>
-
                     <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: heightScale(25) }}>
                         <Button mode='contained' style={{ borderWidth: 1, minWidth: widthScale(150) }} buttonColor={theme.colors.tertiary} onPress={stopSound}>
                             CLOSE

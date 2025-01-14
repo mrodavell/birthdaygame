@@ -4,7 +4,7 @@ import { Button, Modal, Portal, Text, useTheme } from 'react-native-paper';
 import { useGameStore } from '../../zustand/game';
 import { Audio } from 'expo-av';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { heightScale, moderateWs, widthScale } from '../../helpers/scaler';
+import { moderateWs, widthScale } from '../../helpers/scaler';
 import { formatToPHP } from '../../helpers/format';
 
 type TCongratsDialogProps = {
@@ -23,6 +23,8 @@ const CongratsDialog: FC<TCongratsDialogProps> = ({
     const totalWin = useGameStore(state => state.totalWin);
     const winCombination = useGameStore(state => state.winCombination);
     const winningTickets = useGameStore(state => state.winningTickets);
+    const resultDate = useGameStore(state => state.resultDate);
+    const resultTime = useGameStore(state => state.resultTime);
     const [isPlaying, setIsPlaying] = useState(false);
     const [sound, setSound] = useState<Audio.Sound | undefined>();
 
@@ -72,7 +74,9 @@ const CongratsDialog: FC<TCongratsDialogProps> = ({
                         </Button>
                     </View>
                     <Text style={{ fontSize: moderateWs(25, 1) }}>🎉 Congratulations 🎉</Text>
-                    <Text style={{ fontSize: moderateWs(14, 1), marginTop: widthScale(30) }}>You hit the winning combinations</Text>
+                    <Text style={{ fontSize: moderateWs(14, 1), marginTop: widthScale(10) }}>Draw date: {resultDate}</Text>
+                    <Text style={{ fontSize: moderateWs(14, 1), marginTop: widthScale(10) }}>Draw time: {resultTime} {resultTime === "10:00" ? "AM" : "PM"}</Text>
+                    <Text style={{ fontSize: moderateWs(14, 1), marginTop: widthScale(20) }}>You hit the winning combinations</Text>
                     <Text style={{ fontSize: moderateWs(20, 1), marginTop: widthScale(10), fontWeight: 'bold' }}>{winCombination}</Text>
                     <Text style={{ fontSize: moderateWs(20, 1), marginTop: widthScale(10) }}>You won: {formatToPHP(totalWin.toString())}</Text>
                     <Text style={{ marginTop: widthScale(10) }}>Your winning tickets:</Text>

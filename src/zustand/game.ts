@@ -39,6 +39,8 @@ type TState = {
   isWin: boolean;
   totalWin: number;
   winCombination: string;
+  resultDate: string;
+  resultTime: string;
   isOpenBet: boolean;
   winningTickets: string[];
 };
@@ -136,6 +138,8 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
   isOpenBet: false,
   totalWin: 0,
   winCombination: "",
+  resultDate: "",
+  resultTime: "",
   winningTickets: [],
   currentDrawTime: "",
   boards: [
@@ -558,11 +562,16 @@ export const useGameStore = create<TState & TActions>((set, get) => ({
 
       if (finalTotalWin > 0) {
         useWalletStore.getState().deposit(finalTotalWin, "Deposit Winnings");
+        const formattedResultDate = dayjs(result.create_at).format(
+          "MMMM DD, YYYY"
+        );
         set(() => ({ totalWin: finalTotalWin }));
         set(() => ({ isWin: true }));
         set(() => ({ totalBet: 0 }));
         set(() => ({ winCombination: result.result }));
         set(() => ({ winningTickets: winningTickets }));
+        set(() => ({ resultDate: formattedResultDate }));
+        set(() => ({ resultTime: result.drawtime }));
 
         await supabase
           .from("tickets")
